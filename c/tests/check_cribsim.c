@@ -21,11 +21,9 @@ START_TEST(test_score_hand)
 END_TEST
 
 Suite* play_suite(void) {
-    Suite* suite;
-    TCase* tc_play;
+    Suite* suite = suite_create("cribsim");
+    TCase* tc_play = tcase_create("play");
 
-    suite = suite_create("cribsim");
-    tc_play = tcase_create("play");
     tcase_add_test(tc_play, test_score_hand);
     suite_add_tcase(suite, tc_play);
 
@@ -33,15 +31,11 @@ Suite* play_suite(void) {
 }
 
 int main(void) {
-    int num_failed;
-    Suite* suite;
-    SRunner* runner;
-
-    suite = play_suite();
-    runner = srunner_create(suite);
+    Suite* suite = play_suite();
+    SRunner* runner = srunner_create(suite);
 
     srunner_run_all(runner, CK_NORMAL);
-    num_failed = srunner_ntests_failed(runner);
+    int num_failed = srunner_ntests_failed(runner);
     srunner_free(runner);
 
     return (num_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;

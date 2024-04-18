@@ -4,6 +4,7 @@
 typedef unsigned int uint;
 
 typedef enum {
+    SUIT_NONE,
     SUIT_CLUB,
     SUIT_DIAMOND,
     SUIT_HEART,
@@ -11,6 +12,7 @@ typedef enum {
 } suit_t;
 
 typedef enum {
+    RANK_JOKER,
     RANK_ACE,
     RANK_2,
     RANK_3,

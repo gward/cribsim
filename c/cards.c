@@ -19,9 +19,12 @@ char* card_debug(char result[], card_t card) {
  * Return result.
  */
 char* card_str(char result[], card_t card) {
-    char rank_char[13] = "A234567890JQK";
+    char rank_char[] = "*A234567890JQK";
     result[0] = rank_char[card.rank];
     switch (card.suit) {
+    case SUIT_NONE:
+        result[1] = 0;
+        break;
     case SUIT_CLUB:
         strcpy(result+1, "♣");
         break;

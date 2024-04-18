@@ -7,21 +7,26 @@
 /* test case: cards */
 
 START_TEST(test_card_string) {
-    card_t card = {SUIT_CLUB, 0};
+    card_t card = {0, 0};
     char buf[5];
     ck_assert_str_eq(card_debug(buf, card), "00:0");
+    ck_assert_str_eq(card_str(buf, card), "*");
+
+    card.suit = SUIT_CLUB;
+    card.rank = RANK_ACE;
+    ck_assert_str_eq(card_debug(buf, card), "01:1");
     ck_assert_str_eq(card_str(buf, card), "A♣");
 
     card.suit = SUIT_HEART;
-    ck_assert_str_eq(card_debug(buf, card), "00:2");
+    ck_assert_str_eq(card_debug(buf, card), "01:3");
     ck_assert_str_eq(card_str(buf, card), "A♥");
 
-    card.rank = 1;
-    ck_assert_str_eq(card_debug(buf, card), "01:2");
+    card.rank = RANK_2;
+    ck_assert_str_eq(card_debug(buf, card), "02:3");
     ck_assert_str_eq(card_str(buf, card), "2♥");
 
-    card.rank = 12;
-    ck_assert_str_eq(card_debug(buf, card), "12:2");
+    card.rank = RANK_KING;
+    ck_assert_str_eq(card_debug(buf, card), "13:3");
     ck_assert_str_eq(card_str(buf, card), "K♥");
 }
 

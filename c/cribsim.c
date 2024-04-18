@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
 
     deck_t* deck = new_deck();
     shuffle_deck(deck);
-    //print_cards("shuffled deck", deck->ncards, deck->cards);
+    print_cards("shuffled deck", deck->ncards, deck->cards);
 
     play_hand(deck);
 

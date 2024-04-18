@@ -51,6 +51,7 @@ void sort_cards(int ncards, card_t cards[]);
 
 hand_t* new_hand(int ncards);
 void copy_hand(hand_t *dest, hand_t *src);
+void hand_set_card(hand_t *hand, int idx, rank_t rank, suit_t suit);
 
 deck_t* new_deck();
 void shuffle_deck(deck_t* deck);

@@ -126,3 +126,9 @@ void copy_hand(hand_t *dest, hand_t *src) {
     dest->ncards = src->ncards;
     memcpy(dest->cards, src->cards, sizeof(card_t) * src->ncards);
 }
+
+void hand_set_card(hand_t *hand, int idx, rank_t rank, suit_t suit) {
+    assert(hand->ncards > idx);
+    hand->cards[idx].rank = rank;
+    hand->cards[idx].suit = suit;
+}

@@ -51,13 +51,28 @@ START_TEST(test_new_deck) {
 START_TEST(test_score_hand) {
     hand_t* hand = new_hand(5);
 
-    // Empty hand: zero score.
-    hand->ncards = 0;
+    // One card: zero, no matter the card.
+    hand->ncards = 1;
+    hand_set_card(hand, 0, RANK_2, SUIT_DIAMOND);
     ck_assert_int_eq(score_hand(hand), 0);
 
-    // One card: still zero, no matter the card.
-    hand->ncards = 1;
+    // Two cards might score, but these don't.
+    hand->ncards = 2;
+    hand_set_card(hand, 1, RANK_3, SUIT_HEART);
     ck_assert_int_eq(score_hand(hand), 0);
+
+    // But a pair scores.
+    hand_set_card(hand, 1, RANK_2, SUIT_HEART);
+    ck_assert_int_eq(score_hand(hand), 2);
+
+    // Test pairs in a bigger hand.
+    hand->ncards = 4;
+    hand_set_card(hand, 2, RANK_5, SUIT_CLUB);
+    hand_set_card(hand, 3, RANK_5, SUIT_SPADE);
+    ck_assert_int_eq(score_hand(hand), 4);   // 2 pairs
+
+    hand_set_card(hand, 2, RANK_2, SUIT_SPADE);
+    ck_assert_int_eq(score_hand(hand), 6);   // 3 of a kind in 2s: 3 pairs
 
     free(hand);
 }

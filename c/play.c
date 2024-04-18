@@ -34,13 +34,27 @@ void drop_two(hand_t *dest_hand, hand_t *src_hand, int drop1, int drop2) {
  * of cards). hand must already be sorted!
  */
 uint score_hand(hand_t *hand) {
+    assert(hand->ncards > 0);
+
+    //char buf1[5], buf2[5];
+    uint score = 0;
+
     // Search for pairs.
-    for (int i = 0; i < hand->ncards; i++) {
-
+    //
+    //  2♦ 3♥ 3♠ 5♠ -> 1 pair
+    //  2♦ 2♥ 5♣ 5♠ -> 2 pairs
+    //  2♦ 2♥ 2♠ 5♠ -> 3 pairs
+    uint ncards = hand->ncards;
+    card_t* cards = hand->cards;
+    int num_pairs = 0;
+    for (int i = 0; i < ncards - 1; i++) {
+        for (int j = i + 1; j < ncards && cards[j].rank == cards[i].rank; j++) {
+            num_pairs++;
+        }
     }
+    score += num_pairs * 2;
 
-
-    return 0;
+    return score;
 }
 
 /* Discard two cards that maximize the fixed score -- i.e. the score
@@ -71,8 +85,8 @@ void discard_simple(hand_t* hand) {
             }
             else {
                 printf("no change: top_score = %d, score = %d\n",
-                       score,
-                       top_score);
+                       top_score,
+                       score);
             }
         }
     }

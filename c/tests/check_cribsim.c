@@ -12,18 +12,22 @@ START_TEST(test_score_hand)
     hand->ncards = 0;
     ck_assert_int_eq(score_hand(hand), 0);
 
+    // One card: still zero, no matter the card.
+    hand->ncards = 1;
+    ck_assert_int_eq(score_hand(hand), 0);
+
     free(hand);
 }
 END_TEST
 
 Suite* play_suite(void) {
     Suite* suite;
-    TCase* tc_core;
+    TCase* tc_play;
 
-    suite = suite_create("play");
-    tc_core = tcase_create("core");
-    tcase_add_test(tc_core, test_score_hand);
-    suite_add_tcase(suite, tc_core);
+    suite = suite_create("cribsim");
+    tc_play = tcase_create("play");
+    tcase_add_test(tc_play, test_score_hand);
+    suite_add_tcase(suite, tc_play);
 
     return suite;
 }

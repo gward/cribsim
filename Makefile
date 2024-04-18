@@ -18,11 +18,11 @@ build/cribsim: $(OBJ)
 	mkdir -p build
 	$(CC) $(LDFLAGS) -o $@ $^
 
-build/check_play: c/tests/check_play.c $(TESTOBJ)
+build/check_cribsim: c/tests/check_cribsim.c $(TESTOBJ)
 	mkdir -p build
 	$(CC) $(CFLAGS) -o $@ $^ -lcheck -lsubunit -lm
 
-check: build/check_play
+check: build/check_cribsim
 	$<
 
 grind: build/cribsim

@@ -10,7 +10,7 @@
  * Return result.
  */
 char* card_debug(char result[], card_t card) {
-    sprintf(result, "%02d:%d", card.rank, card.suit);
+    sprintf(result, "%02d:%d", (int) card.rank, (int) card.suit);
     return result;
 }
 
@@ -22,16 +22,16 @@ char* card_str(char result[], card_t card) {
     char rank_char[13] = "A234567890JQK";
     result[0] = rank_char[card.rank];
     switch (card.suit) {
-    case CLUB:
+    case SUIT_CLUB:
         strcpy(result+1, "♣");
         break;
-    case DIAMOND:
+    case SUIT_DIAMOND:
         strcpy(result+1, "♦");
         break;
-    case HEART:
+    case SUIT_HEART:
         strcpy(result+1, "♥");
         break;
-    case SPADE:
+    case SUIT_SPADE:
         strcpy(result+1, "♠");
         break;
     }
@@ -84,8 +84,8 @@ deck_t* new_deck() {
     deck->offset = 0;
     deck->ncards = ncards;
     int i = 0;
-    for (int rank = 0; rank < 13; rank++) {
-        for (int suit = 0; suit < 4; suit++) {
+    for (int rank = RANK_ACE; rank <= RANK_KING; rank++) {
+        for (int suit = SUIT_CLUB; suit <= SUIT_SPADE; suit++) {
             deck->cards[i].rank = rank;
             deck->cards[i].suit = suit;
             i++;

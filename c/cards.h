@@ -4,15 +4,31 @@
 typedef unsigned int uint;
 
 typedef enum {
-    CLUB,
-    DIAMOND,
-    HEART,
-    SPADE,
+    SUIT_CLUB,
+    SUIT_DIAMOND,
+    SUIT_HEART,
+    SUIT_SPADE,
 } suit_t;
 
+typedef enum {
+    RANK_ACE,
+    RANK_2,
+    RANK_3,
+    RANK_4,
+    RANK_5,
+    RANK_6,
+    RANK_7,
+    RANK_8,
+    RANK_9,
+    RANK_10,
+    RANK_JACK,
+    RANK_QUEEN,
+    RANK_KING,
+} rank_t;
+
 typedef struct {
-    uint suit:2;
-    uint rank:4;
+    suit_t suit:4;
+    rank_t rank:4;
 } card_t;
 
 typedef struct {

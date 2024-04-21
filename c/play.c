@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "play.h"
+#include "twiddle.h"
 
 /* Drop one card from hand (modify hand in place). */
 void drop_one(hand_t* hand, int drop) {
@@ -57,6 +58,53 @@ uint score_hand(hand_t *hand) {
     return score;
 }
 
+typedef struct {
+    uint top_score;
+    hand_t *input;
+    hand_t *candidate;
+    hand_t *winner;
+} discard_data_t;
+
+void eval_candidate_simple(int ncards, int indexes[], void *data) {
+    discard_data_t* discard_data = (discard_data_t*) data;
+    hand_t* input = discard_data->input;
+    hand_t* candidate = discard_data->candidate;
+    hand_t* winner = discard_data->winner;
+
+    assert(candidate->ncards <= input->ncards);
+    assert(winner->ncards == candidate->ncards);
+    assert(candidate->ncards >= ncards);
+    assert(winner->ncards >= ncards);
+
+    printf("visit_candidate: {");
+    for (int i = 0; i < ncards; i++) {
+        printf("%d%c", indexes[i], (i == ncards - 1) ? '}' : ',');
+    }
+    putchar('\n');
+
+    for (int i = 0; i < ncards; i++) {
+        candidate->cards[i] = input->cards[indexes[i]];
+    }
+    print_cards("candidate hand", candidate->ncards, candidate->cards);
+
+    uint score = score_hand(candidate);
+    if (score > discard_data->top_score) {
+        // Ignore ties -- just use the first candidate to get to the top.
+        printf("new winner: top_score = %d, score = %d\n",
+               discard_data->top_score,
+               score);
+        discard_data->top_score = score;
+        copy_hand(winner, candidate);
+    }
+    else {
+        printf("no change: top_score = %d, score = %d\n",
+               discard_data->top_score,
+               score);
+    }
+
+}
+
+
 /* Discard two cards that maximize the fixed score -- i.e. the score
  * from the 4 cards kept, ignoring the up card.
  */
@@ -64,35 +112,14 @@ void discard_simple(hand_t* hand) {
     sort_cards(hand->ncards, hand->cards);
     print_cards("discard_simple(): sorted hand", hand->ncards, hand->cards);
 
-    uint score, top_score = 0;
-    hand_t* candidate = new_hand(hand->ncards);
-    hand_t* winner = new_hand(hand->ncards);
-    for (int i = 0; i < hand->ncards; i++) {
-        for (int j = i + 1; j < hand->ncards; j++) {
-            drop_two(candidate, hand, i, j);
-            printf("dropped i=%d, j=%d: candidate hand:\n", i, j);
-            print_cards(NULL, candidate->ncards, candidate->cards);
+    hand_t* candidate = new_hand(4);
+    hand_t* winner = new_hand(4);
 
-            score = score_hand(candidate);
-            if (score > top_score) {
-                // ignore ties -- we'll just use the last candidate hand
-                // that beats the current top score
-                printf("new winner: top_score = %d, score = %d\n",
-                       top_score,
-                       score);
-                top_score = score;
-                copy_hand(winner, candidate);
-            }
-            else {
-                printf("no change: top_score = %d, score = %d\n",
-                       top_score,
-                       score);
-            }
-        }
-    }
+    discard_data_t discard_data = {0, hand, candidate, winner};
+    iter_combos(hand->ncards, 4, eval_candidate_simple, (void*) &discard_data);
 
-    // In case every permutation has score 0, arbitrarily pick the last one.
-    if (top_score == 0) {
+    // In case every candidate had score 0, arbitrarily pick the last one.
+    if (discard_data.top_score == 0) {
         copy_hand(winner, candidate);
     }
 

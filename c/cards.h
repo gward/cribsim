@@ -44,6 +44,8 @@ typedef struct {
     card_t cards[];
 } deck_t;
 
+extern uint rank_value[14];
+
 char* card_debug(char result[], card_t card);
 char* card_str(char result[], card_t card);
 void print_cards(char *prefix, int ncards, card_t cards[]);

@@ -5,6 +5,26 @@
 
 #include "cards.h"
 
+/* Map member of the rank_t enum to the value of that card when
+ * counting 15s or pegging.
+ */
+uint rank_value[] = {
+    0,                        /* RANK_JOKER */
+    1,                        /* RANK_ACE */
+    2,                        /* RANK_2 */
+    3,                        /* RANK_3 */
+    4,                        /* RANK_4 */
+    5,                        /* RANK_5 */
+    6,                        /* RANK_6 */
+    7,                        /* RANK_7 */
+    8,                        /* RANK_8 */
+    9,                        /* RANK_9 */
+    10,                       /* RANK_10 */
+    10,                       /* RANK_JACK */
+    10,                       /* RANK_QUEEN */
+    10,                       /* RANK_KING */
+};
+
 /* Write a debug-friendly string representation of a card to result.
  * result must have room for 5 chars (including trailing NUL byte).
  * Return result.

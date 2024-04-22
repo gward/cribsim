@@ -3,6 +3,7 @@
 
 #include <check.h>
 
+#include "../score.h"
 #include "../play.h"
 
 /* test case: cards */
@@ -47,7 +48,7 @@ START_TEST(test_new_deck) {
     free(deck);
 }
 
-/* test case: play */
+/* test case: score */
 
 /* Parse a string like "A♥ 3♥ 5♠ 6♦" into cards, and use it to populate hand. */
 static void parse_hand(hand_t* dest, char cards[]) {
@@ -229,17 +230,17 @@ END_TEST
 Suite* cribsum_suite(void) {
     Suite* suite = suite_create("cribsim");
     TCase* tc_cards = tcase_create("cards");
-    TCase* tc_play = tcase_create("play");
+    TCase* tc_score = tcase_create("score");
 
     tcase_add_test(tc_cards, test_card_string);
     tcase_add_test(tc_cards, test_new_deck);
     suite_add_tcase(suite, tc_cards);
 
-    tcase_add_test(tc_play, test_count_15s);
-    tcase_add_test(tc_play, test_count_pairs);
-    tcase_add_test(tc_play, test_count_runs);
-    tcase_add_test(tc_play, test_score_hand);
-    suite_add_tcase(suite, tc_play);
+    tcase_add_test(tc_score, test_count_15s);
+    tcase_add_test(tc_score, test_count_pairs);
+    tcase_add_test(tc_score, test_count_runs);
+    tcase_add_test(tc_score, test_score_hand);
+    suite_add_tcase(suite, tc_score);
 
     return suite;
 }

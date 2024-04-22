@@ -3,10 +3,6 @@
 
 #include "cards.h"
 
-uint count_15s(hand_t *hand);
-uint count_pairs(hand_t *hand);
-uint count_runs(hand_t* hand);
-uint score_hand(hand_t *hand);
 void play_hand(deck_t* deck);
 
 #endif

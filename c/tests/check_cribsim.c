@@ -188,14 +188,39 @@ START_TEST(test_count_pairs) {
 }
 END_TEST
 
+START_TEST(test_count_runs) {
+    hand_t* hand = new_hand(6);
+
+    parse_hand(hand, "4♥ 5♦ 5♠ 0♥ J♥");      // nice hand, but no runs
+    ck_assert_int_eq(count_runs(hand), 0);
+
+    parse_hand(hand, "4♥ 5♦ 6♠ 0♥ J♥");      // single run of 3
+    ck_assert_int_eq(count_runs(hand), 3);
+
+    parse_hand(hand, "4♥ 5♦ 9♠ 0♥ J♥");      // single run of 3, but at the end
+    ck_assert_int_eq(count_runs(hand), 3);
+
+    parse_hand(hand, "4♥ 8♦ 9♠ 0♥ J♥");      // single run of 4
+    ck_assert_int_eq(count_runs(hand), 4);
+
+    parse_hand(hand, "4♥ 8♦ 8♠ 9♠ 0♥ Q♥");   // double run of 3: 6 points
+    ck_assert_int_eq(count_runs(hand), 6);
+
+    parse_hand(hand, "4♥ 8♦ 8♠ 9♠ 0♥ 0♥");   // double double run of 3: 12 points
+    ck_assert_int_eq(count_runs(hand), 12);
+}
+END_TEST
+
 START_TEST(test_score_hand) {
     hand_t* hand = new_hand(5);
 
     hand->ncards = 4;
-    parse_hand(hand, "5♦ 5♠ 0♥ J♥");    // four 15s and a pair
+    parse_hand(hand, "5♦ 5♠ 0♥ J♥");         // four 15s and a pair
     ck_assert_int_eq(score_hand(hand), 10);
 
     hand->ncards = 5;
+    parse_hand(hand, "6♦ 7♥ 7♠ 8♠ 9♥");     // three 15s and a double run of 4
+    ck_assert_int_eq(score_hand(hand), 16);
 
     free(hand);
 }
@@ -212,6 +237,7 @@ Suite* cribsum_suite(void) {
 
     tcase_add_test(tc_play, test_count_15s);
     tcase_add_test(tc_play, test_count_pairs);
+    tcase_add_test(tc_play, test_count_runs);
     tcase_add_test(tc_play, test_score_hand);
     suite_add_tcase(suite, tc_play);
 

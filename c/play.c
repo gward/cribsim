@@ -90,6 +90,56 @@ uint count_pairs(hand_t* hand) {
     return num_pairs;
 }
 
+uint count_runs(hand_t* hand) {
+    uint run_points = 0;
+    uint current_run = 1;
+    uint repeats = 1;
+    int i;
+    for (i = 1; i < hand->ncards; i++) {
+        rank_t prev_rank = hand->cards[i-1].rank;
+        rank_t cur_rank = hand->cards[i].rank;
+
+        // 3 4: extend current_run to 2
+        // 3 4 5: extend current_run to 3
+        if (prev_rank < RANK_KING && cur_rank == prev_rank + 1) {
+            current_run++;
+        }
+
+        // 3 3: if we see 4 5 next, it's a double run (repeats = 2)
+        // 3 4 4: if we see 5 next, it's a double run (repeats = 2)
+        // 3 4 4 5 5: it's a double double run (repeats = 4)
+        else if (prev_rank == cur_rank) {
+            repeats *= 2;
+        }
+
+        // End of a run (if any).
+        else if (prev_rank < RANK_QUEEN && cur_rank > prev_rank + 1) {
+            if (current_run >= 3) {
+                run_points += current_run * repeats;
+                printf("run ended at i=%d: current_run=%d, repeats=%d, run_points=%d\n",
+                       i,
+                       current_run,
+                       repeats,
+                       run_points);
+            }
+            current_run = 1;
+            repeats = 1;
+        }
+    }
+
+    // Fall off the end also counts as the end of a run.
+    if (current_run >= 3) {
+        run_points += current_run * repeats;
+        printf("run ended at i=%d: current_run=%d, repeats=%d, run_points=%d\n",
+               i,
+               current_run,
+               repeats,
+               run_points);
+    }
+
+    return run_points;
+}
+
 /* Calculate the score of a single hand (which might have any number
  * of cards). hand must already be sorted!
  */
@@ -99,8 +149,9 @@ uint score_hand(hand_t *hand) {
     print_cards("scoring hand", hand->ncards, hand->cards);
     uint num_15s = count_15s(hand);
     uint num_pairs = count_pairs(hand);
+    uint run_points = count_runs(hand);
 
-    return (num_15s * 2) + (num_pairs * 2);
+    return (num_15s * 2) + (num_pairs * 2) + run_points;
 }
 
 typedef struct {

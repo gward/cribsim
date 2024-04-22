@@ -160,7 +160,7 @@ void iter_combos_bitwise(int N, int M, void (*visit)(int, int[])) {
     }
 }
 
-void iter_combos(int N, int M, void (*visit)(int, int[], void* data), void* data) {
+void iter_combos(int N, int M, void (*visit)(int, int[], void *data), void *data) {
     int i, x, y, z, p[N+2], a[N], c[M];
 
     // a is the set of N values whose combinations we want: in this

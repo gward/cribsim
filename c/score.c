@@ -10,8 +10,8 @@ typedef struct {
 } count_data_t;
 
 /* Examine a single subset of a hand, counting whether it sums to 15. */
-void visit_count_15s(int ncards, int indexes[], void* _data) {
-    count_data_t* data = (count_data_t*) _data;
+void visit_count_15s(int ncards, int indexes[], void *_data) {
+    count_data_t *data = (count_data_t *) _data;
     uint sum = 0;
     for (int i = 0; i < ncards; i++) {
         sum += rank_value[data->hand->cards[indexes[i]].rank];
@@ -29,14 +29,14 @@ uint count_15s(hand_t *hand) {
     return data.num_15s;
 }
 
-uint count_pairs(hand_t* hand) {
+uint count_pairs(hand_t *hand) {
     // Search for pairs.
     //
     //  2♦ 3♥ 3♠ 5♠ -> 1 pair
     //  2♦ 2♥ 5♣ 5♠ -> 2 pairs
     //  2♦ 2♥ 2♠ 5♠ -> 3 pairs
     uint ncards = hand->ncards;
-    card_t* cards = hand->cards;
+    card_t *cards = hand->cards;
     int num_pairs = 0;
     for (int i = 0; i < ncards - 1; i++) {
         for (int j = i + 1; j < ncards && cards[j].rank == cards[i].rank; j++) {
@@ -46,7 +46,7 @@ uint count_pairs(hand_t* hand) {
     return num_pairs;
 }
 
-uint count_runs(hand_t* hand) {
+uint count_runs(hand_t *hand) {
     uint run_points = 0;
     uint current_run = 1;
     uint repeats = 1;

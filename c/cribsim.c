@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     seed ^= (uint) time(NULL);
     srand(seed);
 
-    deck_t* deck = new_deck();
+    deck_t *deck = new_deck();
     shuffle_deck(deck);
     print_cards("shuffled deck", deck->ncards, deck->cards);
 

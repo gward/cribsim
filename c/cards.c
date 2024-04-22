@@ -29,7 +29,7 @@ uint rank_value[] = {
  * result must have room for 5 chars (including trailing NUL byte).
  * Return result.
  */
-char* card_debug(char result[], card_t card) {
+char *card_debug(char result[], card_t card) {
     sprintf(result, "%02d:%d", (int) card.rank, (int) card.suit);
     return result;
 }
@@ -38,7 +38,7 @@ char* card_debug(char result[], card_t card) {
  * result must have room for 5 chars (including trailing NUL byte).
  * Return result.
  */
-char* card_str(char result[], card_t card) {
+char *card_str(char result[], card_t card) {
     char rank_char[] = "*A234567890JQK";
     result[0] = rank_char[card.rank];
     switch (card.suit) {
@@ -77,9 +77,9 @@ void print_cards(char *prefix, int ncards, card_t cards[]) {
     }
 }
 
-static int cmp_cards(const void* a, const void* b) {
-    card_t* card_a = (card_t*) a;
-    card_t* card_b = (card_t*) b;
+static int cmp_cards(const void *a, const void *b) {
+    card_t *card_a = (card_t *) a;
+    card_t *card_b = (card_t *) b;
     /* char card_a_str[5], card_b_str[5]; */
     /* printf("cmp_cards(): card_a = %s, card_b = %s\n", */
     /*        card_debug(card_a_str, *card_a), */
@@ -97,12 +97,12 @@ void sort_cards(int ncards, card_t cards[]) {
 }
 
 /* allocate and populate a new deck with the standard 52 cards, sorted */
-deck_t* new_deck() {
+deck_t *new_deck() {
     // sanity check to ensure I understand struct layout
     assert(sizeof(card_t) == sizeof(uint));
 
     int ncards = 52;
-    deck_t* deck = malloc(sizeof(deck_t) + (ncards * sizeof(card_t)));
+    deck_t *deck = malloc(sizeof(deck_t) + (ncards * sizeof(card_t)));
     deck->offset = 0;
     deck->ncards = ncards;
     int i = 0;
@@ -117,7 +117,7 @@ deck_t* new_deck() {
 }
 
 /* shuffle an existing deck in place */
-void shuffle_deck(deck_t* deck) {
+void shuffle_deck(deck_t *deck) {
     card_t tmp;
     for (int i = 0; i < deck->ncards; i++) {
         int j = rand() % deck->ncards;
@@ -128,14 +128,14 @@ void shuffle_deck(deck_t* deck) {
 }
 
 /* Allocate an empty hand of the requested size */
-hand_t* new_hand(int ncards) {
+hand_t *new_hand(int ncards) {
     printf("sizeof(hand_t) = %lu\n", sizeof(hand_t));
     printf("sizeof(card_t) = %lu\n", sizeof(card_t));
     printf("ncards = %d\n", ncards);
 
     int nbytes = sizeof(hand_t) + (ncards * sizeof(card_t));
     printf("new_hand: nbytes = %d\n", nbytes);
-    hand_t* hand = calloc(1, nbytes);
+    hand_t *hand = calloc(1, nbytes);
     hand->ncards = ncards;
     return hand;
 }

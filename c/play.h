@@ -3,6 +3,6 @@
 
 #include "cards.h"
 
-void play_hand(deck_t* deck);
+void play_hand(deck_t *deck);
 
 #endif

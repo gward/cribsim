@@ -46,16 +46,16 @@ typedef struct {
 
 extern uint rank_value[14];
 
-char* card_debug(char result[], card_t card);
-char* card_str(char result[], card_t card);
+char *card_debug(char result[], card_t card);
+char *card_str(char result[], card_t card);
 void print_cards(char *prefix, int ncards, card_t cards[]);
 void sort_cards(int ncards, card_t cards[]);
 
-hand_t* new_hand(int ncards);
+hand_t *new_hand(int ncards);
 void copy_hand(hand_t *dest, hand_t *src);
 void hand_set_card(hand_t *hand, int idx, rank_t rank, suit_t suit);
 
-deck_t* new_deck();
-void shuffle_deck(deck_t* deck);
+deck_t *new_deck();
+void shuffle_deck(deck_t *deck);
 
 #endif

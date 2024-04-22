@@ -96,6 +96,39 @@ uint count_runs(hand_t *hand) {
     return run_points;
 }
 
+uint count_flush(hand_t *hand) {
+    // If we're doing something weird, ignore flushes.
+    if (hand->ncards < 4 || hand->ncards > 5) {
+        return 0;
+    }
+
+    // If the first four cards are the same suit, that's a flush.
+    uint flush = 1;
+    int i;
+    for (i = 1; i < 4; i++) {
+        suit_t prev_suit = hand->cards[i-1].suit;
+        suit_t cur_suit = hand->cards[i].suit;
+
+        if (cur_suit != prev_suit) {
+            flush = 0;
+        }
+        else if (flush > 0 && cur_suit == prev_suit) {
+            flush++;
+        }
+    }
+
+    // If we have a fifth card, it can extend a flush of 4 to 5.
+    if (hand->ncards > 4 && flush > 0) {
+        suit_t prev_suit = hand->cards[i-1].suit;
+        suit_t cur_suit = hand->cards[i].suit;
+        if (cur_suit == prev_suit) {
+            flush++;
+        }
+    }
+
+    return flush;
+}
+
 /* Calculate the score of a single hand (which might have any number
  * of cards). hand must already be sorted!
  */

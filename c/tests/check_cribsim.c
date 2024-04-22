@@ -209,8 +209,38 @@ START_TEST(test_count_runs) {
 
     parse_hand(hand, "4♥ 8♦ 8♠ 9♠ 0♥ 0♥");   // double double run of 3: 12 points
     ck_assert_int_eq(count_runs(hand), 12);
+
+    free(hand);
 }
 END_TEST
+
+START_TEST(test_count_flush) {
+    hand_t* hand = new_hand(5);
+
+    /* hand of four either is a flush ... */
+    hand->ncards = 4;
+    parse_hand(hand, "4♥ 6♥ 7♥ K♥");
+    ck_assert_int_eq(count_flush(hand), 4);
+
+    /* ... or is not a flush */
+    parse_hand(hand, "4♥ 6♥ 7♠ K♥");
+    ck_assert_int_eq(count_flush(hand), 0);
+
+    /* but if we add the upcard at the end, it might be a flush of 4 ... */
+    hand->ncards = 5;
+    parse_hand(hand, "4♥ 6♥ 7♥ K♥ K♠");
+    ck_assert_int_eq(count_flush(hand), 4);
+
+    /* ... or a flush of 5 ... */
+    parse_hand(hand, "4♥ 6♥ 7♥ Q♥ K♥");
+    ck_assert_int_eq(count_flush(hand), 5);
+
+    /* ... or not a flush at all */
+    parse_hand(hand, "4♥ 6♦ 7♥ Q♥ K♥");
+    ck_assert_int_eq(count_flush(hand), 0);
+
+    free(hand);
+}
 
 START_TEST(test_score_hand) {
     hand_t* hand = new_hand(5);
@@ -239,6 +269,7 @@ Suite* cribsum_suite(void) {
     tcase_add_test(tc_score, test_count_15s);
     tcase_add_test(tc_score, test_count_pairs);
     tcase_add_test(tc_score, test_count_runs);
+    tcase_add_test(tc_score, test_count_flush);
     tcase_add_test(tc_score, test_score_hand);
     suite_add_tcase(suite, tc_score);
 

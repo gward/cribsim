@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <check.h>
@@ -48,31 +49,153 @@ START_TEST(test_new_deck) {
 
 /* test case: play */
 
-START_TEST(test_score_hand) {
+/* Parse a string like "A♥ 3♥ 5♠ 6♦" into cards, and use it to populate hand. */
+static void parse_hand(hand_t* dest, char cards[]) {
+    char* next = cards + 0;
+    int i = 0;
+    while (*next != '\0') {
+        for (; *next == ' '; next++) {
+            /* consume optional whitespace */
+        }
+
+        char rank_ch = *(next++);
+        rank_t rank;
+
+        switch (rank_ch) {
+        case '*':
+            rank = RANK_JOKER;
+            break;
+        case 'A':
+            rank = RANK_ACE;
+            break;
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            rank = ((rank_t) (rank_ch - '2')) + RANK_2;
+            break;
+        case '0':
+            rank = RANK_10;
+            break;
+        case 'J':
+            rank = RANK_JACK;
+            break;
+        case 'Q':
+            rank = RANK_QUEEN;
+            break;
+        case 'K':
+            rank = RANK_KING;
+            break;
+        default:
+            fprintf(stderr, "abort: invalid rank char: %c (%02hhx)\n", rank_ch, rank_ch);
+            abort();
+        }
+
+        char* suit_str = next;
+        suit_t suit;
+
+        if (strncmp(suit_str, "♣", 3) == 0) {
+            suit = SUIT_CLUB;
+        }
+        else if (strncmp(suit_str, "♦", 3) == 0) {
+            suit = SUIT_DIAMOND;
+        }
+        else if (strncmp(suit_str, "♥", 3) == 0) {
+            suit = SUIT_HEART;
+        }
+        else if (strncmp(suit_str, "♠", 3) == 0) {
+            suit = SUIT_SPADE;
+        }
+        else {
+            fprintf(stderr, "abort: invalid suit string: %s\n", suit_str);
+            abort();
+        }
+
+        next += 3;              /* consume the 3 bytes of a UTF-encoded suit string */
+
+        dest->cards[i].suit = suit;
+        dest->cards[i].rank = rank;
+        i++;
+    }
+
+}
+
+START_TEST(test_count_15s) {
+    hand_t* hand = new_hand(5);
+
+    // One card cannot possibly add up to 15.
+    hand->ncards = 1;
+
+    parse_hand(hand, "2♦");
+    ck_assert_int_eq(count_15s(hand), 0);
+    parse_hand(hand, "K♦");
+    ck_assert_int_eq(count_15s(hand), 0);
+
+    // Use 4 cards for the next several tests.
+    hand->ncards = 4;
+
+    // This takes all 4 cards to get to a single 15.
+    parse_hand(hand, "A♥ 3♥ 5♠ 6♦");
+    ck_assert_int_eq(count_15s(hand), 1);
+
+    // Again a single 15, but this one takes 3 cards: 2 + 5 + 8.
+    parse_hand(hand, "2♦ 3♥ 5♠ 8♥");
+    ck_assert_int_eq(count_15s(hand), 1);
+
+    // Two cards make exactly one 15.
+    parse_hand(hand, "2♦ 3♥ 7♠ 8♥");
+    ck_assert_int_eq(count_15s(hand), 1);
+
+    // This one has two 15s: 2 + 3 + Q, 5 + Q.
+    parse_hand(hand, "2♦ 3♥ 5♠ Q♥");
+    ck_assert_int_eq(count_15s(hand), 2);
+
+    free(hand);
+}
+END_TEST
+
+START_TEST(test_count_pairs) {
     hand_t* hand = new_hand(5);
 
     // One card: zero, no matter the card.
     hand->ncards = 1;
-    hand_set_card(hand, 0, RANK_2, SUIT_DIAMOND);
-    ck_assert_int_eq(score_hand(hand), 0);
+    parse_hand(hand, "2♦");
+    ck_assert_int_eq(count_pairs(hand), 0);
 
-    // Two cards might score, but these don't.
+    // Two cards might score, but not these two.
     hand->ncards = 2;
-    hand_set_card(hand, 1, RANK_3, SUIT_HEART);
-    ck_assert_int_eq(score_hand(hand), 0);
+    parse_hand(hand, "2♦ 3♥");
+    ck_assert_int_eq(count_pairs(hand), 0);
 
-    // But a pair scores.
-    hand_set_card(hand, 1, RANK_2, SUIT_HEART);
-    ck_assert_int_eq(score_hand(hand), 2);
+    // But make them a pair, and now we're talking.
+    parse_hand(hand, "2♦ 2♥");
+    ck_assert_int_eq(count_pairs(hand), 1);
 
     // Test pairs in a bigger hand.
     hand->ncards = 4;
-    hand_set_card(hand, 2, RANK_5, SUIT_CLUB);
-    hand_set_card(hand, 3, RANK_5, SUIT_SPADE);
-    ck_assert_int_eq(score_hand(hand), 4);   // 2 pairs
+    parse_hand(hand, "2♦ 2♥ 5♣ 5♠");
+    ck_assert_int_eq(count_pairs(hand), 2);
 
-    hand_set_card(hand, 2, RANK_2, SUIT_SPADE);
-    ck_assert_int_eq(score_hand(hand), 6);   // 3 of a kind in 2s: 3 pairs
+    // 3 of a kind is 3 pairs.
+    parse_hand(hand, "2♦ 2♥ 2♠ 5♠");
+    ck_assert_int_eq(count_pairs(hand), 3);
+
+    free(hand);
+}
+END_TEST
+
+START_TEST(test_score_hand) {
+    hand_t* hand = new_hand(5);
+
+    hand->ncards = 4;
+    parse_hand(hand, "5♦ 5♠ 0♥ J♥");    // four 15s and a pair
+    ck_assert_int_eq(score_hand(hand), 10);
+
+    hand->ncards = 5;
 
     free(hand);
 }
@@ -87,6 +210,8 @@ Suite* cribsum_suite(void) {
     tcase_add_test(tc_cards, test_new_deck);
     suite_add_tcase(suite, tc_cards);
 
+    tcase_add_test(tc_play, test_count_15s);
+    tcase_add_test(tc_play, test_count_pairs);
     tcase_add_test(tc_play, test_score_hand);
     suite_add_tcase(suite, tc_play);
 

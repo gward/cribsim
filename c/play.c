@@ -31,15 +31,49 @@ void drop_two(hand_t *dest_hand, hand_t *src_hand, int drop1, int drop2) {
 }
 
 
-/* Calculate the score of a single hand (which might have any number
- * of cards). hand must already be sorted!
- */
-uint score_hand(hand_t *hand) {
-    assert(hand->ncards > 0);
+static uint _rank_value[] = {
+    0,                        /* RANK_JOKER */
+    1,                        /* RANK_ACE */
+    2,                        /* RANK_2 */
+    3,                        /* RANK_3 */
+    4,                        /* RANK_4 */
+    5,                        /* RANK_5 */
+    6,                        /* RANK_6 */
+    7,                        /* RANK_7 */
+    8,                        /* RANK_8 */
+    9,                        /* RANK_9 */
+    10,                       /* RANK_10 */
+    10,                       /* RANK_JACK */
+    10,                       /* RANK_QUEEN */
+    10,                       /* RANK_KING */
+};
 
-    //char buf1[5], buf2[5];
-    uint score = 0;
+typedef struct {
+    hand_t *hand;
+    uint num_15s;
+} count_data_t;
 
+/* Examine a single subset of a hand, counting whether it sums to 15. */
+void visit_count_15s(int ncards, int indexes[], void* _data) {
+    count_data_t* data = (count_data_t*) _data;
+    uint sum = 0;
+    for (int i = 0; i < ncards; i++) {
+        sum += _rank_value[data->hand->cards[indexes[i]].rank];
+    }
+    if (sum == 15) {
+        data->num_15s++;
+    }
+}
+
+uint count_15s(hand_t *hand) {
+    count_data_t data = {hand: hand, num_15s: 0};
+    for (int subset_len = hand->ncards; subset_len >= 2; subset_len--) {
+        iter_combos(hand->ncards, subset_len, visit_count_15s, &data);
+    }
+    return data.num_15s;
+}
+
+uint count_pairs(hand_t* hand) {
     // Search for pairs.
     //
     //  2♦ 3♥ 3♠ 5♠ -> 1 pair
@@ -53,9 +87,20 @@ uint score_hand(hand_t *hand) {
             num_pairs++;
         }
     }
-    score += num_pairs * 2;
+    return num_pairs;
+}
 
-    return score;
+/* Calculate the score of a single hand (which might have any number
+ * of cards). hand must already be sorted!
+ */
+uint score_hand(hand_t *hand) {
+    assert(hand->ncards > 0);
+
+    print_cards("scoring hand", hand->ncards, hand->cards);
+    uint num_15s = count_15s(hand);
+    uint num_pairs = count_pairs(hand);
+
+    return (num_15s * 2) + (num_pairs * 2);
 }
 
 typedef struct {
@@ -65,11 +110,11 @@ typedef struct {
     hand_t *winner;
 } discard_data_t;
 
-void eval_candidate_simple(int ncards, int indexes[], void *data) {
-    discard_data_t* discard_data = (discard_data_t*) data;
-    hand_t* input = discard_data->input;
-    hand_t* candidate = discard_data->candidate;
-    hand_t* winner = discard_data->winner;
+void eval_candidate_simple(int ncards, int indexes[], void* _data) {
+    discard_data_t* data = (discard_data_t*) _data;
+    hand_t* input = data->input;
+    hand_t* candidate = data->candidate;
+    hand_t* winner = data->winner;
 
     assert(candidate->ncards <= input->ncards);
     assert(winner->ncards == candidate->ncards);
@@ -88,17 +133,17 @@ void eval_candidate_simple(int ncards, int indexes[], void *data) {
     print_cards("candidate hand", candidate->ncards, candidate->cards);
 
     uint score = score_hand(candidate);
-    if (score > discard_data->top_score) {
+    if (score > data->top_score) {
         // Ignore ties -- just use the first candidate to get to the top.
         printf("new winner: top_score = %d, score = %d\n",
-               discard_data->top_score,
+               data->top_score,
                score);
-        discard_data->top_score = score;
+        data->top_score = score;
         copy_hand(winner, candidate);
     }
     else {
         printf("no change: top_score = %d, score = %d\n",
-               discard_data->top_score,
+               data->top_score,
                score);
     }
 
@@ -115,11 +160,11 @@ void discard_simple(hand_t* hand) {
     hand_t* candidate = new_hand(4);
     hand_t* winner = new_hand(4);
 
-    discard_data_t discard_data = {0, hand, candidate, winner};
-    iter_combos(hand->ncards, 4, eval_candidate_simple, (void*) &discard_data);
+    discard_data_t data = {0, hand, candidate, winner};
+    iter_combos(hand->ncards, 4, eval_candidate_simple, (void*) &data);
 
     // In case every candidate had score 0, arbitrarily pick the last one.
-    if (discard_data.top_score == 0) {
+    if (data.top_score == 0) {
         copy_hand(winner, candidate);
     }
 

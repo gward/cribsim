@@ -68,7 +68,6 @@ static int cmp_cards(const void* a, const void* b) {
     uint val_a = (card_a->rank << 4) | (card_a->suit);
     uint val_b = (card_b->rank << 4) | (card_b->suit);
     int cmp = val_a - val_b;
-    printf("  val_a = %02x, val_b = %02x, cmp = %d\n", val_a, val_b, cmp);
     return cmp;
 }
 

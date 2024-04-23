@@ -137,6 +137,7 @@ hand_t *new_hand(int size) {
     printf("new_hand: nbytes = %d\n", nbytes);
     hand_t *hand = calloc(1, nbytes);
     hand->size = size;
+    hand->starter = -1;
     return hand;
 }
 

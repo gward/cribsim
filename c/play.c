@@ -80,7 +80,7 @@ void eval_candidate_simple(int ncards, int indexes[], void *_data) {
 
 
 /* Discard two cards that maximize the fixed score -- i.e. the score
- * from the 4 cards kept, ignoring the up card.
+ * from the 4 cards kept, ignoring the starter card.
  */
 void discard_simple(hand_t *hand) {
     sort_cards(hand->ncards, hand->cards);

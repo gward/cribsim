@@ -36,6 +36,7 @@ typedef struct {
 typedef struct {
     uint size;                // number of entries allocated for the array
     uint ncards;              // number of entries actually used
+    int starter;              // index of the starter card in cards (-1 if none)
     card_t cards[];
 } hand_t;
 

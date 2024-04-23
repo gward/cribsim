@@ -98,35 +98,45 @@ uint count_runs(hand_t *hand) {
 
 uint count_flush(hand_t *hand) {
     // If we're doing something weird, ignore flushes.
-    if (hand->ncards < 4 || hand->ncards > 5) {
-        return 0;
-    }
+    /* if (hand->ncards < 4 || hand->ncards > 5) { */
+    /*     return 0; */
+    /* } */
 
-    // If the first four cards are the same suit, that's a flush.
-    uint flush = 1;
-    int i;
-    for (i = 1; i < 4; i++) {
-        suit_t prev_suit = hand->cards[i-1].suit;
+    // If everything except the starter is of the same suite, that's a flush.
+    suit_t flush_suit = SUIT_NONE;
+    uint cur_flush = 0;
+    for (int i = 0; i < hand->ncards; i++) {
+        if (hand->starter > -1 && i == hand->starter) {
+            // Skip the starter card, no matter where we are in the hand.
+            continue;
+        }
+        else if (flush_suit == SUIT_NONE) {
+            // This is the first non-starter card: flush of length 1.
+            flush_suit = hand->cards[i].suit;
+            cur_flush = 1;
+            continue;
+        }
+
         suit_t cur_suit = hand->cards[i].suit;
-
-        if (cur_suit != prev_suit) {
-            flush = 0;
+        if (cur_suit != flush_suit) {
+            // The flush is broken: we're not going to find anything.
+            return 0;
         }
-        else if (flush > 0 && cur_suit == prev_suit) {
-            flush++;
-        }
-    }
-
-    // If we have a fifth card, it can extend a flush of 4 to 5.
-    if (hand->ncards > 4 && flush > 0) {
-        suit_t prev_suit = hand->cards[i-1].suit;
-        suit_t cur_suit = hand->cards[i].suit;
-        if (cur_suit == prev_suit) {
-            flush++;
+        else if (cur_flush > 0 && cur_suit == flush_suit) {
+            // Continue the flush.
+            cur_flush++;
         }
     }
 
-    return flush;
+    // If the starter card is known, it can extend a flush by one.
+    if (hand->starter > -1 && cur_flush > 0) {
+        card_t starter = hand->cards[hand->starter];
+        if (starter.suit == flush_suit) {
+            cur_flush++;
+        }
+    }
+
+    return cur_flush;
 }
 
 /* Calculate the score of a single hand (which might have any number

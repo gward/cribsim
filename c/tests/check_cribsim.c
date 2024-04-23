@@ -216,7 +216,7 @@ END_TEST
 START_TEST(test_count_flush) {
     hand_t* hand = new_hand(5);
 
-    /* hand of four either is a flush ... */
+    /* hand with no starter either is a flush ... */
     hand->ncards = 4;
     parse_hand(hand, "4♥ 6♥ 7♥ K♥");
     ck_assert_int_eq(count_flush(hand), 4);
@@ -225,8 +225,9 @@ START_TEST(test_count_flush) {
     parse_hand(hand, "4♥ 6♥ 7♠ K♥");
     ck_assert_int_eq(count_flush(hand), 0);
 
-    /* but if we add the upcard at the end, it might be a flush of 4 ... */
+    /* but if we add the starter, it might be a flush of 4 ... */
     hand->ncards = 5;
+    hand->starter = 4;
     parse_hand(hand, "4♥ 6♥ 7♥ K♥ K♠");
     ck_assert_int_eq(count_flush(hand), 4);
 
@@ -237,6 +238,15 @@ START_TEST(test_count_flush) {
     /* ... or not a flush at all */
     parse_hand(hand, "4♥ 6♦ 7♥ Q♥ K♥");
     ck_assert_int_eq(count_flush(hand), 0);
+
+    /* but if the starter was the 6♦, it is a flush of 4 after all */
+    hand->starter = 1;
+    ck_assert_int_eq(count_flush(hand), 4);
+
+    /* edge case: starter is the lowest card */
+    hand->starter = 0;
+    parse_hand(hand, "4♦ 6♥ 7♥ Q♥ K♥");
+    ck_assert_int_eq(count_flush(hand), 4);
 
     free(hand);
 }

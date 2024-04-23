@@ -62,19 +62,19 @@ void eval_candidate_simple(int ncards, int indexes[], void *_data) {
     }
     print_cards("candidate hand", candidate->ncards, candidate->cards);
 
-    uint score = score_hand(candidate);
-    if (score > data->top_score) {
+    score_t score = score_hand(candidate);
+    if (score.total > data->top_score) {
         // Ignore ties -- just use the first candidate to get to the top.
         printf("new winner: top_score = %d, score = %d\n",
                data->top_score,
-               score);
-        data->top_score = score;
+               score.total);
+        data->top_score = score.total;
         copy_hand(winner, candidate);
     }
     else {
         printf("no change: top_score = %d, score = %d\n",
                data->top_score,
-               score);
+               score.total);
     }
 }
 
@@ -134,6 +134,22 @@ void discard_random(hand_t *hand, hand_t *crib) {
     free(tmp_hand);
 }
 
+/* Add the starter card to a hand, sort the hand in-place, and set
+ * hand->starter to record where position of 'starter' in 'hand'.
+ */
+void add_starter(hand_t *hand, card_t starter) {
+    hand_append(hand, starter);
+    sort_cards(hand->ncards, hand->cards);
+    hand->starter = -1;
+    for (int i = 0; i < hand->ncards; i++) {
+        if (card_cmp(&hand->cards[i], &starter) == 0) {
+            hand->starter = i;
+            break;
+        }
+    }
+    assert(hand->starter >= 0);
+}
+
 void play_hand(deck_t *deck) {
     int nplayers = 2;
     int ncards = 6;
@@ -173,19 +189,16 @@ void play_hand(deck_t *deck) {
     char buf[5];
     printf("starter: deck[%d] = %s\n", starter_idx, card_str(buf, starter));
 
-    hand_append(hand_a, starter);
-    hand_append(hand_b, starter);
-    hand_append(crib, starter);
-    sort_cards(hand_a->ncards, hand_a->cards);
-    sort_cards(hand_b->ncards, hand_b->cards);
-    sort_cards(crib->ncards, crib->cards);
+    add_starter(hand_a, starter);
+    add_starter(hand_b, starter);
+    add_starter(crib, starter);
 
-    uint score_a = score_hand(hand_a);
-    printf("hand_a with starter: %u\n", score_a);
-    uint score_b = score_hand(hand_b);
-    printf("hand_b with starter: %u\n", score_b);
-    uint score_crib = score_hand(hand_b);
-    printf("crib with starter:   %u\n", score_crib);
+    score_t score_a = score_hand(hand_a);
+    score_print("hand_a with starter", score_a);
+    score_t score_b = score_hand(hand_b);
+    score_print("hand_b with starter", score_b);
+    score_t score_crib = score_hand(crib);
+    score_print("crib with starter ", score_crib);
 
     free(hand_b);
     free(hand_a);

@@ -272,17 +272,30 @@ START_TEST(test_score_hand) {
 
     hand->ncards = 4;
     parse_hand(hand, "5♦ 5♠ 0♥ J♥");         // four 15s and a pair
-    ck_assert_int_eq(score_hand(hand), 10);
+    ck_assert_int_eq(score_hand(hand).total, 10);
 
     hand->ncards = 5;
     parse_hand(hand, "6♦ 7♥ 7♠ 8♠ 9♥");     // three 15s and a double run of 4
-    ck_assert_int_eq(score_hand(hand), 16);
+    ck_assert_int_eq(score_hand(hand).total, 16);
 
     hand->ncards = 4;
     parse_hand(hand, "6♠ 7♠ 8♠ 9♠");        // two 15s, run of 4, flush of 4
-    ck_assert_int_eq(score_hand(hand), 12);
+    ck_assert_int_eq(score_hand(hand).total, 12);
 
     free(hand);
+}
+END_TEST
+
+/* test case: play */
+
+START_TEST(test_add_starter) {
+    hand_t *hand = new_hand(5);
+    parse_hand(hand, "4♠ 7♠ 9♠ 0♠");
+    add_starter(hand, (card_t) {rank: RANK_5, suit: SUIT_CLUB});
+
+    ck_assert_int_eq(hand->starter, 1);
+    ck_assert_int_eq(hand->cards[1].rank, RANK_5);
+    ck_assert_int_eq(hand->cards[1].suit, SUIT_CLUB);
 }
 END_TEST
 
@@ -290,6 +303,7 @@ Suite* cribsum_suite(void) {
     Suite* suite = suite_create("cribsim");
     TCase* tc_cards = tcase_create("cards");
     TCase* tc_score = tcase_create("score");
+    TCase* tc_play = tcase_create("play");
 
     tcase_add_test(tc_cards, test_card_string);
     tcase_add_test(tc_cards, test_card_cmp);
@@ -302,6 +316,9 @@ Suite* cribsum_suite(void) {
     tcase_add_test(tc_score, test_count_flush);
     tcase_add_test(tc_score, test_score_hand);
     suite_add_tcase(suite, tc_score);
+
+    tcase_add_test(tc_play, test_add_starter);
+    suite_add_tcase(suite, tc_play);
 
     return suite;
 }

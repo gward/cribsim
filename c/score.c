@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "cards.h"
+#include "score.h"
 #include "twiddle.h"
 
 typedef struct {
@@ -142,14 +143,49 @@ uint count_flush(hand_t *hand) {
 /* Calculate the score of a single hand (which might have any number
  * of cards). hand must already be sorted!
  */
-uint score_hand(hand_t *hand) {
+score_t score_hand(hand_t *hand) {
     assert(hand->ncards > 0);
 
     print_cards("scoring hand", hand->ncards, hand->cards);
-    uint num_15s = count_15s(hand);
-    uint num_pairs = count_pairs(hand);
-    uint run_points = count_runs(hand);
-    uint flush_points = count_flush(hand);
+    score_t score;
+    score.fifteens = 2 * count_15s(hand);
+    score.pairs = 2 * count_pairs(hand);
+    score.runs = count_runs(hand);
+    score.flush = count_flush(hand);
+    score.right_jack = 0;
+    score.total = score.fifteens + score.pairs + score.runs + score.flush + score.right_jack;
 
-    return (num_15s * 2) + (num_pairs * 2) + run_points + flush_points;
+    return score;
+}
+
+void score_print(char *prefix, score_t score) {
+    if (prefix != NULL) {
+        printf("%s: ", prefix);
+    }
+    //char *post = (score.total == 0 ? "" : " (");
+    printf("%d", score.total);
+    char *sep = " (";
+    if (score.fifteens > 0) {
+        printf("%s%d fifteen(s) for %d", sep, score.fifteens / 2, score.fifteens);
+        sep = ", ";
+    }
+    if (score.pairs > 0) {
+        printf("%s%d pair(s) for %d", sep, score.pairs / 2, score.pairs);
+        sep = ", ";
+    }
+    if (score.runs > 0) {
+        printf("%srun(s) for %d", sep, score.runs);
+        sep = ", ";
+    }
+    if (score.flush > 0) {
+        printf("%sflush for %d", sep, score.flush);
+        sep = ", ";
+    }
+    if (score.right_jack > 0) {
+        printf("%sright jack for %d", sep, score.right_jack);
+    }
+    if (score.total > 0) {
+        putchar(')');
+    }
+    putchar('\n');
 }

@@ -267,6 +267,31 @@ START_TEST(test_count_flush) {
     free(hand);
 }
 
+START_TEST(test_count_right_jack) {
+    hand_t* hand = new_hand(5);
+
+    parse_hand(hand, "4♥ 7♣ 9♣ J♦ J♥");
+
+    // starter card not set: no points possible
+    ck_assert_int_eq(count_right_jack(hand), 0);
+
+    // starter card does not match either jack: no points
+    hand->starter = 1;
+    ck_assert_int_eq(count_right_jack(hand), 0);
+
+    // starter card matches a jack: one point
+    hand->starter = 0;
+    ck_assert_int_eq(count_right_jack(hand), 1);
+
+    // starter card is a jack: still one point (it'll be two points to
+    // the dealer because the starter will be both in their hand and
+    // the crib)
+    hand->starter = 3;
+    ck_assert_int_eq(count_right_jack(hand), 1);
+
+    free(hand);
+}
+
 START_TEST(test_score_hand) {
     hand_t* hand = new_hand(5);
 
@@ -281,6 +306,10 @@ START_TEST(test_score_hand) {
     hand->ncards = 4;
     parse_hand(hand, "6♠ 7♠ 8♠ 9♠");        // two 15s, run of 4, flush of 4
     ck_assert_int_eq(score_hand(hand).total, 12);
+
+    parse_hand(hand, "6♠ 7♠ 8♠ 9♠ J♠");     // two 15s, run of 4, flush of 5, right jack
+    hand->starter = 4;
+    ck_assert_int_eq(score_hand(hand).total, 14);
 
     free(hand);
 }
@@ -314,6 +343,7 @@ Suite* cribsum_suite(void) {
     tcase_add_test(tc_score, test_count_pairs);
     tcase_add_test(tc_score, test_count_runs);
     tcase_add_test(tc_score, test_count_flush);
+    tcase_add_test(tc_score, test_count_right_jack);
     tcase_add_test(tc_score, test_score_hand);
     suite_add_tcase(suite, tc_score);
 

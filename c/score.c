@@ -140,6 +140,22 @@ uint count_flush(hand_t *hand) {
     return cur_flush;
 }
 
+uint count_right_jack(hand_t *hand) {
+    if (hand->starter < 0) {
+        return 0;
+    }
+    assert(hand->starter < hand->ncards);
+
+    suit_t starter_suit = hand->cards[hand->starter].suit;
+    for (int i = 0; i < hand->ncards; i++) {
+        card_t card = hand->cards[i];
+        if (card.rank == RANK_JACK && card.suit == starter_suit) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 /* Calculate the score of a single hand (which might have any number
  * of cards). hand must already be sorted!
  */
@@ -152,7 +168,7 @@ score_t score_hand(hand_t *hand) {
     score.pairs = 2 * count_pairs(hand);
     score.runs = count_runs(hand);
     score.flush = count_flush(hand);
-    score.right_jack = 0;
+    score.right_jack = count_right_jack(hand);
     score.total = score.fifteens + score.pairs + score.runs + score.flush + score.right_jack;
 
     return score;

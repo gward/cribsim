@@ -34,7 +34,8 @@ typedef struct {
 } card_t;
 
 typedef struct {
-    uint ncards;
+    uint size;                // number of entries allocated for the array
+    uint ncards;              // number of entries actually used
     card_t cards[];
 } hand_t;
 
@@ -52,6 +53,8 @@ void print_cards(char *prefix, int ncards, card_t cards[]);
 void sort_cards(int ncards, card_t cards[]);
 
 hand_t *new_hand(int ncards);
+void hand_append(hand_t *dest, card_t card);
+void hand_truncate(hand_t *dest);
 void copy_hand(hand_t *dest, hand_t *src);
 void hand_set_card(hand_t *hand, int idx, rank_t rank, suit_t suit);
 

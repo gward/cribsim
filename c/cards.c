@@ -128,20 +128,31 @@ void shuffle_deck(deck_t *deck) {
 }
 
 /* Allocate an empty hand of the requested size */
-hand_t *new_hand(int ncards) {
+hand_t *new_hand(int size) {
     printf("sizeof(hand_t) = %lu\n", sizeof(hand_t));
     printf("sizeof(card_t) = %lu\n", sizeof(card_t));
-    printf("ncards = %d\n", ncards);
+    printf("ncards = %d\n", size);
 
-    int nbytes = sizeof(hand_t) + (ncards * sizeof(card_t));
+    int nbytes = sizeof(hand_t) + (size * sizeof(card_t));
     printf("new_hand: nbytes = %d\n", nbytes);
     hand_t *hand = calloc(1, nbytes);
-    hand->ncards = ncards;
+    hand->size = size;
     return hand;
 }
 
+void hand_append(hand_t *dest, card_t card) {
+    assert(dest->ncards < dest->size);
+    dest->cards[dest->ncards] = card;
+    dest->ncards++;
+}
+
+void hand_truncate(hand_t *dest) {
+    dest->ncards = 0;
+    memset(dest->cards, 0, sizeof(card_t) * dest->size);
+}
+
 void copy_hand(hand_t *dest, hand_t *src) {
-    assert(dest->ncards >= src->ncards);
+    assert(dest->size >= src->size);
     dest->ncards = src->ncards;
     memcpy(dest->cards, src->cards, sizeof(card_t) * src->ncards);
 }

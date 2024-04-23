@@ -52,6 +52,7 @@ START_TEST(test_new_deck) {
 
 /* Parse a string like "A♥ 3♥ 5♠ 6♦" into cards, and use it to populate hand. */
 static void parse_hand(hand_t* dest, char cards[]) {
+    hand_truncate(dest);
     char* next = cards + 0;
     int i = 0;
     while (*next != '\0') {
@@ -60,14 +61,14 @@ static void parse_hand(hand_t* dest, char cards[]) {
         }
 
         char rank_ch = *(next++);
-        rank_t rank;
+        card_t card = {0, 0};
 
         switch (rank_ch) {
         case '*':
-            rank = RANK_JOKER;
+            card.rank = RANK_JOKER;
             break;
         case 'A':
-            rank = RANK_ACE;
+            card.rank = RANK_ACE;
             break;
         case '2':
         case '3':
@@ -77,19 +78,19 @@ static void parse_hand(hand_t* dest, char cards[]) {
         case '7':
         case '8':
         case '9':
-            rank = ((rank_t) (rank_ch - '2')) + RANK_2;
+            card.rank = ((rank_t) (rank_ch - '2')) + RANK_2;
             break;
         case '0':
-            rank = RANK_10;
+            card.rank = RANK_10;
             break;
         case 'J':
-            rank = RANK_JACK;
+            card.rank = RANK_JACK;
             break;
         case 'Q':
-            rank = RANK_QUEEN;
+            card.rank = RANK_QUEEN;
             break;
         case 'K':
-            rank = RANK_KING;
+            card.rank = RANK_KING;
             break;
         default:
             fprintf(stderr, "abort: invalid rank char: %c (%02hhx)\n", rank_ch, rank_ch);
@@ -97,19 +98,18 @@ static void parse_hand(hand_t* dest, char cards[]) {
         }
 
         char* suit_str = next;
-        suit_t suit;
 
         if (strncmp(suit_str, "♣", 3) == 0) {
-            suit = SUIT_CLUB;
+            card.suit = SUIT_CLUB;
         }
         else if (strncmp(suit_str, "♦", 3) == 0) {
-            suit = SUIT_DIAMOND;
+            card.suit = SUIT_DIAMOND;
         }
         else if (strncmp(suit_str, "♥", 3) == 0) {
-            suit = SUIT_HEART;
+            card.suit = SUIT_HEART;
         }
         else if (strncmp(suit_str, "♠", 3) == 0) {
-            suit = SUIT_SPADE;
+            card.suit = SUIT_SPADE;
         }
         else {
             fprintf(stderr, "abort: invalid suit string: %s\n", suit_str);
@@ -118,8 +118,7 @@ static void parse_hand(hand_t* dest, char cards[]) {
 
         next += 3;              /* consume the 3 bytes of a UTF-encoded suit string */
 
-        dest->cards[i].suit = suit;
-        dest->cards[i].rank = rank;
+        hand_append(dest, card);
         i++;
     }
 

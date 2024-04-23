@@ -22,7 +22,7 @@ void drop_one(hand_t *hand, int drop) {
 
 /* Copy src_hand into dest_hand, dropping two cards along the way. */
 void drop_two(hand_t *dest_hand, hand_t *src_hand, int drop1, int drop2) {
-    assert(dest_hand->ncards >= src_hand->ncards - 2);
+    assert(dest_hand->size >= src_hand->ncards - 2);
     for (int src = 0, dst = 0; src < src_hand->ncards; src++) {
         if (src != drop1 && src != drop2) {
             dest_hand->cards[dst++] = src_hand->cards[src];
@@ -44,19 +44,20 @@ void eval_candidate_simple(int ncards, int indexes[], void *_data) {
     hand_t *candidate = data->candidate;
     hand_t *winner = data->winner;
 
-    assert(candidate->ncards <= input->ncards);
-    assert(winner->ncards == candidate->ncards);
-    assert(candidate->ncards >= ncards);
-    assert(winner->ncards >= ncards);
+    assert(candidate->size <= input->ncards);
+    assert(winner->size == candidate->size);
+    assert(candidate->size == ncards);
+    assert(winner->size >= ncards);
 
-    printf("visit_candidate: {");
+    printf("eval_candidate_simple: {");
     for (int i = 0; i < ncards; i++) {
         printf("%d%c", indexes[i], (i == ncards - 1) ? '}' : ',');
     }
     putchar('\n');
 
+    hand_truncate(candidate);
     for (int i = 0; i < ncards; i++) {
-        candidate->cards[i] = input->cards[indexes[i]];
+        hand_append(candidate, input->cards[indexes[i]]);
     }
     print_cards("candidate hand", candidate->ncards, candidate->cards);
 
@@ -147,8 +148,8 @@ void play_hand(deck_t *deck) {
     // Deal the hands.
     int deck_offset = 0;
     for (int i = 0; i < ncards; i++) {
-        hand_a->cards[i] = deck->cards[deck_offset++];
-        hand_b->cards[i] = deck->cards[deck_offset++];
+        hand_append(hand_a, deck->cards[deck_offset++]);
+        hand_append(hand_b, deck->cards[deck_offset++]);
     }
 
     print_cards("hand_a after deal", hand_a->ncards, hand_a->cards);

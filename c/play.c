@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -75,14 +76,12 @@ void eval_candidate_simple(int ncards, int indexes[], void *_data) {
                data->top_score,
                score);
     }
-
 }
-
 
 /* Discard two cards that maximize the fixed score -- i.e. the score
  * from the 4 cards kept, ignoring the starter card.
  */
-void discard_simple(hand_t *hand) {
+void discard_simple(hand_t *hand, hand_t *crib) {
     sort_cards(hand->ncards, hand->cards);
     print_cards("discard_simple(): sorted hand", hand->ncards, hand->cards);
 
@@ -97,6 +96,20 @@ void discard_simple(hand_t *hand) {
         copy_hand(winner, candidate);
     }
 
+    // Add discarded cards to the crib.
+    for (int i = 0; i < hand->ncards; i++) {
+        bool kept = false;
+        for (int j = 0; j < winner->ncards; j++) {
+            if (card_cmp(&hand->cards[i], &winner->cards[j]) == 0) {
+                kept = true;
+                break;
+            }
+        }
+        if (!kept) {
+            hand_append(crib, hand->cards[i]);
+        }
+    }
+
     print_cards("winning candidate", winner->ncards, winner->cards);
     copy_hand(hand, winner);
 
@@ -105,35 +118,20 @@ void discard_simple(hand_t *hand) {
 }
 
 /* Discard two cards at random. */
-void discard_random(hand_t *hand) {
+void discard_random(hand_t *hand, hand_t *crib) {
     int drop1, drop2;
     drop1 = rand() % hand->ncards;
     while ((drop2 = rand() % hand->ncards) == drop1) {
     }
     printf("discard_random: drop1=%d, drop2=%d\n", drop1, drop2);
 
+    hand_append(crib, hand->cards[drop1]);
+    hand_append(crib, hand->cards[drop2]);
+
     hand_t *tmp_hand = new_hand(hand->ncards - 2);
-    /* card_t dest_cards[hand->ncards - 2]; */
-    /* hand_t dest_hand; */
-    /* dest_hand.ncards = hand->ncards - 2; */
-    /* dest_hand.cards = dest_cards; */
     drop_two(tmp_hand, hand, drop1, drop2);
-    //hand->ncards = tmp_hand->ncards;
-    //memcpy(hand->cards, tmp_hand->cards, sizeof(card_t) * tmp_hand->ncards);
     copy_hand(hand, tmp_hand);
     free(tmp_hand);
-
-    /*
-    int drop;
-
-    drop = rand() % hand->ncards;
-    printf("discard_random: ncards = %d, drop = %d\n", hand->ncards, drop);
-    drop_one(hand, drop);
-
-    drop = rand() % hand->ncards;
-    printf("discard_random: ncards = %d, drop = %d\n", hand->ncards, drop);
-    drop_one(hand, drop);
-    */
 }
 
 void play_hand(deck_t *deck) {
@@ -142,6 +140,7 @@ void play_hand(deck_t *deck) {
 
     hand_t *hand_a = new_hand(ncards);
     hand_t *hand_b = new_hand(ncards);
+    hand_t *crib = new_hand(5);
     printf("hand_a = %p %d\n", hand_a, hand_a->ncards);
     printf("hand_b = %p %d\n", hand_b, hand_b->ncards);
 
@@ -151,6 +150,7 @@ void play_hand(deck_t *deck) {
         hand_append(hand_a, deck->cards[deck_offset++]);
         hand_append(hand_b, deck->cards[deck_offset++]);
     }
+    assert(deck->ncards - deck_offset == 40);
 
     print_cards("hand_a after deal", hand_a->ncards, hand_a->cards);
     print_cards("hand_b after deal", hand_b->ncards, hand_b->cards);
@@ -158,11 +158,36 @@ void play_hand(deck_t *deck) {
     deck->offset = deck_offset;
 
     // Play two different strategies for discarding cards.
-    discard_simple(hand_a);
-    discard_random(hand_b);
+    discard_simple(hand_a, crib);
+    discard_random(hand_b, crib);
     print_cards("hand_a after discard", hand_a->ncards, hand_a->cards);
     print_cards("hand_b after discard", hand_b->ncards, hand_b->cards);
+    print_cards("crib after discard", crib->ncards, crib->cards);
+
+    // Ummm, need to implement pegging!
+
+    // Turn up the starter card, add it to each hand, and score them.
+    int starter_idx = rand() % (deck->ncards - deck->offset);
+    starter_idx += deck->offset;
+    card_t starter = deck->cards[starter_idx];
+    char buf[5];
+    printf("starter: deck[%d] = %s\n", starter_idx, card_str(buf, starter));
+
+    hand_append(hand_a, starter);
+    hand_append(hand_b, starter);
+    hand_append(crib, starter);
+    sort_cards(hand_a->ncards, hand_a->cards);
+    sort_cards(hand_b->ncards, hand_b->cards);
+    sort_cards(crib->ncards, crib->cards);
+
+    uint score_a = score_hand(hand_a);
+    printf("hand_a with starter: %u\n", score_a);
+    uint score_b = score_hand(hand_b);
+    printf("hand_b with starter: %u\n", score_b);
+    uint score_crib = score_hand(hand_b);
+    printf("crib with starter:   %u\n", score_crib);
 
     free(hand_b);
     free(hand_a);
+    free(crib);
 }

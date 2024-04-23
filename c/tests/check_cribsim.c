@@ -32,6 +32,22 @@ START_TEST(test_card_string) {
     ck_assert_str_eq(card_str(buf, card), "K♥");
 }
 
+START_TEST(test_card_cmp) {
+    card_t card1 = {rank: RANK_3, suit: SUIT_CLUB};
+    card_t card2 = {rank: RANK_3, suit: SUIT_HEART};
+    card_t card3 = {rank: RANK_4, suit: SUIT_HEART};
+
+    ck_assert_int_lt(card_cmp(&card1, &card2), 0);
+    ck_assert_int_gt(card_cmp(&card2, &card1), 0);
+
+    ck_assert_int_lt(card_cmp(&card2, &card3), 0);
+    ck_assert_int_gt(card_cmp(&card3, &card2), 0);
+
+    card1.suit = SUIT_HEART;
+    ck_assert_int_eq(card_cmp(&card1, &card2), 0);
+    ck_assert_int_eq(card_cmp(&card2, &card1), 0);
+}
+
 START_TEST(test_new_deck) {
     deck_t* deck = new_deck();
     ck_assert_int_eq(deck->ncards, 52);
@@ -276,6 +292,7 @@ Suite* cribsum_suite(void) {
     TCase* tc_score = tcase_create("score");
 
     tcase_add_test(tc_cards, test_card_string);
+    tcase_add_test(tc_cards, test_card_cmp);
     tcase_add_test(tc_cards, test_new_deck);
     suite_add_tcase(suite, tc_cards);
 

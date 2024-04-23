@@ -50,6 +50,7 @@ extern uint rank_value[14];
 
 char *card_debug(char result[], card_t card);
 char *card_str(char result[], card_t card);
+int card_cmp(card_t *, card_t *);
 void print_cards(char *prefix, int ncards, card_t cards[]);
 void sort_cards(int ncards, card_t cards[]);
 

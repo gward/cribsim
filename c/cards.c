@@ -63,6 +63,12 @@ char *card_str(char result[], card_t card) {
     return result;
 }
 
+int card_cmp(card_t *card_a, card_t *card_b) {
+    unsigned char val_a = *((unsigned char *) (card_a));
+    unsigned char val_b = *((unsigned char *) (card_b));
+    return val_a - val_b;
+}
+
 void print_cards(char *prefix, int ncards, card_t cards[]) {
     char debug_str[5];
     char friendly_str[5];
@@ -78,17 +84,7 @@ void print_cards(char *prefix, int ncards, card_t cards[]) {
 }
 
 static int cmp_cards(const void *a, const void *b) {
-    card_t *card_a = (card_t *) a;
-    card_t *card_b = (card_t *) b;
-    /* char card_a_str[5], card_b_str[5]; */
-    /* printf("cmp_cards(): card_a = %s, card_b = %s\n", */
-    /*        card_debug(card_a_str, *card_a), */
-    /*        card_debug(card_b_str, *card_b)); */
-
-    uint val_a = (card_a->rank << 4) | (card_a->suit);
-    uint val_b = (card_b->rank << 4) | (card_b->suit);
-    int cmp = val_a - val_b;
-    return cmp;
+    return card_cmp((card_t *) a,  (card_t *) b);
 }
 
 /* Sort an array of cards in place (by rank then suit). */

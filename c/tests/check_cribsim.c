@@ -252,6 +252,10 @@ START_TEST(test_score_hand) {
     parse_hand(hand, "6♦ 7♥ 7♠ 8♠ 9♥");     // three 15s and a double run of 4
     ck_assert_int_eq(score_hand(hand), 16);
 
+    hand->ncards = 4;
+    parse_hand(hand, "6♠ 7♠ 8♠ 9♠");        // two 15s, run of 4, flush of 4
+    ck_assert_int_eq(score_hand(hand), 12);
+
     free(hand);
 }
 END_TEST

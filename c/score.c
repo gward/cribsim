@@ -139,6 +139,7 @@ uint score_hand(hand_t *hand) {
     uint num_15s = count_15s(hand);
     uint num_pairs = count_pairs(hand);
     uint run_points = count_runs(hand);
+    uint flush_points = count_flush(hand);
 
-    return (num_15s * 2) + (num_pairs * 2) + run_points;
+    return (num_15s * 2) + (num_pairs * 2) + run_points + flush_points;
 }

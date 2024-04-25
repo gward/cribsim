@@ -125,16 +125,33 @@ void shuffle_deck(deck_t *deck) {
 
 /* Allocate an empty hand of the requested size */
 hand_t *new_hand(int size) {
-    printf("sizeof(hand_t) = %lu\n", sizeof(hand_t));
-    printf("sizeof(card_t) = %lu\n", sizeof(card_t));
-    printf("ncards = %d\n", size);
-
     int nbytes = sizeof(hand_t) + (size * sizeof(card_t));
-    printf("new_hand: nbytes = %d\n", nbytes);
     hand_t *hand = calloc(1, nbytes);
     hand->size = size;
     hand->starter = -1;
     return hand;
+}
+
+char *hand_str(char buf[], size_t size, hand_t *hand) {
+    size_t size_left = size;
+    char *cur = buf;
+    for (int i = 0; i < hand->ncards; i++) {
+        if (size_left < 5) {
+            break;
+        }
+
+        card_str(cur, hand->cards[i]);
+        cur += 4;
+        size_left -= 4;
+        if (i < hand->ncards - 1) {
+            *(cur++) = ' ';
+            size_left--;
+        }
+    }
+    assert(size_left >= 1);
+    *(cur++) = 0;
+    size_left--;
+    return buf;
 }
 
 void hand_append(hand_t *dest, card_t card) {
@@ -146,6 +163,16 @@ void hand_append(hand_t *dest, card_t card) {
 void hand_truncate(hand_t *dest) {
     dest->ncards = 0;
     memset(dest->cards, 0, sizeof(card_t) * dest->size);
+}
+
+void hand_delete(hand_t *dest, int del_idx) {
+    assert(del_idx < dest->ncards);
+    int i;
+    for (i = del_idx; i < dest->ncards - 1; i++) {
+        dest->cards[i] = dest->cards[i+1];
+    }
+    dest->cards[i] = (card_t) {0, 0};
+    dest->ncards--;
 }
 
 void copy_hand(hand_t *dest, hand_t *src) {

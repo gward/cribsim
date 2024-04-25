@@ -55,8 +55,10 @@ void print_cards(char *prefix, int ncards, card_t cards[]);
 void sort_cards(int ncards, card_t cards[]);
 
 hand_t *new_hand(int ncards);
+char *hand_str(char *buf, size_t size, hand_t *hand);
 void hand_append(hand_t *dest, card_t card);
 void hand_truncate(hand_t *dest);
+void hand_delete(hand_t *dest, int del_idx);
 void copy_hand(hand_t *dest, hand_t *src);
 void hand_set_card(hand_t *hand, int idx, rank_t rank, suit_t suit);
 

@@ -6,66 +6,6 @@
 #include "../score.h"
 #include "../play.h"
 
-/* test case: cards */
-
-START_TEST(test_card_string) {
-    card_t card = {0, 0};
-    char buf[5];
-    ck_assert_str_eq(card_debug(buf, card), "00:0");
-    ck_assert_str_eq(card_str(buf, card), "*");
-
-    card.suit = SUIT_CLUB;
-    card.rank = RANK_ACE;
-    ck_assert_str_eq(card_debug(buf, card), "01:1");
-    ck_assert_str_eq(card_str(buf, card), "A♣");
-
-    card.suit = SUIT_HEART;
-    ck_assert_str_eq(card_debug(buf, card), "01:3");
-    ck_assert_str_eq(card_str(buf, card), "A♥");
-
-    card.rank = RANK_2;
-    ck_assert_str_eq(card_debug(buf, card), "02:3");
-    ck_assert_str_eq(card_str(buf, card), "2♥");
-
-    card.rank = RANK_KING;
-    ck_assert_str_eq(card_debug(buf, card), "13:3");
-    ck_assert_str_eq(card_str(buf, card), "K♥");
-}
-
-START_TEST(test_card_cmp) {
-    card_t card1 = {rank: RANK_3, suit: SUIT_CLUB};
-    card_t card2 = {rank: RANK_3, suit: SUIT_HEART};
-    card_t card3 = {rank: RANK_4, suit: SUIT_HEART};
-
-    ck_assert_int_lt(card_cmp(&card1, &card2), 0);
-    ck_assert_int_gt(card_cmp(&card2, &card1), 0);
-
-    ck_assert_int_lt(card_cmp(&card2, &card3), 0);
-    ck_assert_int_gt(card_cmp(&card3, &card2), 0);
-
-    card1.suit = SUIT_HEART;
-    ck_assert_int_eq(card_cmp(&card1, &card2), 0);
-    ck_assert_int_eq(card_cmp(&card2, &card1), 0);
-}
-
-START_TEST(test_new_deck) {
-    deck_t* deck = new_deck();
-    ck_assert_int_eq(deck->ncards, 52);
-    ck_assert_int_eq(deck->cards[0].rank, RANK_ACE);
-    ck_assert_int_eq(deck->cards[0].suit, SUIT_CLUB);
-    ck_assert_int_eq(deck->cards[1].rank, RANK_ACE);
-    ck_assert_int_eq(deck->cards[1].suit, SUIT_DIAMOND);
-    ck_assert_int_eq(deck->cards[2].rank, RANK_ACE);
-    ck_assert_int_eq(deck->cards[2].suit, SUIT_HEART);
-    ck_assert_int_eq(deck->cards[3].rank, RANK_ACE);
-    ck_assert_int_eq(deck->cards[3].suit, SUIT_SPADE);
-    ck_assert_int_eq(deck->cards[51].rank, RANK_KING);
-    ck_assert_int_eq(deck->cards[51].suit, SUIT_SPADE);
-    free(deck);
-}
-
-/* test case: score */
-
 /* Parse a string like "A♥ 3♥ 5♠ 6♦" into cards, and use it to populate hand. */
 static void parse_hand(hand_t* dest, char cards[]) {
     hand_truncate(dest);
@@ -139,6 +79,126 @@ static void parse_hand(hand_t* dest, char cards[]) {
     }
 
 }
+
+/* test case: cards */
+
+START_TEST(test_card_string) {
+    card_t card = {0, 0};
+    char buf[5];
+    ck_assert_str_eq(card_debug(buf, card), "00:0");
+    ck_assert_str_eq(card_str(buf, card), "*");
+
+    card.suit = SUIT_CLUB;
+    card.rank = RANK_ACE;
+    ck_assert_str_eq(card_debug(buf, card), "01:1");
+    ck_assert_str_eq(card_str(buf, card), "A♣");
+
+    card.suit = SUIT_HEART;
+    ck_assert_str_eq(card_debug(buf, card), "01:3");
+    ck_assert_str_eq(card_str(buf, card), "A♥");
+
+    card.rank = RANK_2;
+    ck_assert_str_eq(card_debug(buf, card), "02:3");
+    ck_assert_str_eq(card_str(buf, card), "2♥");
+
+    card.rank = RANK_KING;
+    ck_assert_str_eq(card_debug(buf, card), "13:3");
+    ck_assert_str_eq(card_str(buf, card), "K♥");
+}
+END_TEST
+
+START_TEST(test_card_cmp) {
+    card_t card1 = {rank: RANK_3, suit: SUIT_CLUB};
+    card_t card2 = {rank: RANK_3, suit: SUIT_HEART};
+    card_t card3 = {rank: RANK_4, suit: SUIT_HEART};
+
+    ck_assert_int_lt(card_cmp(&card1, &card2), 0);
+    ck_assert_int_gt(card_cmp(&card2, &card1), 0);
+
+    ck_assert_int_lt(card_cmp(&card2, &card3), 0);
+    ck_assert_int_gt(card_cmp(&card3, &card2), 0);
+
+    card1.suit = SUIT_HEART;
+    ck_assert_int_eq(card_cmp(&card1, &card2), 0);
+    ck_assert_int_eq(card_cmp(&card2, &card1), 0);
+}
+END_TEST
+
+START_TEST(test_hand_delete) {
+    hand_t *hand = new_hand(4);
+
+    parse_hand(hand, "J♥");
+    hand_delete(hand, 0);
+    ck_assert_int_eq(hand->ncards, 0);
+    ck_assert_int_eq(hand->cards[0].rank, RANK_JOKER);
+    ck_assert_int_eq(hand->cards[0].suit, SUIT_NONE);
+
+    parse_hand(hand, "J♥ 5♠ 2♣ Q♥");
+    hand_delete(hand, 0);
+    ck_assert_int_eq(hand->ncards, 3);
+    ck_assert_int_eq(hand->cards[0].rank, RANK_5);
+    ck_assert_int_eq(hand->cards[0].suit, SUIT_SPADE);
+
+    parse_hand(hand, "J♥ 5♠ 2♣ Q♥");
+    hand_delete(hand, 1);
+    ck_assert_int_eq(hand->ncards, 3);
+    ck_assert_int_eq(hand->cards[1].rank, RANK_2);
+    ck_assert_int_eq(hand->cards[1].suit, SUIT_CLUB);
+
+    parse_hand(hand, "J♥ 5♠ 2♣ Q♥");
+    hand_delete(hand, 3);
+    ck_assert_int_eq(hand->ncards, 3);
+    ck_assert_int_eq(hand->cards[2].rank, RANK_2);
+    ck_assert_int_eq(hand->cards[2].suit, SUIT_CLUB);
+    ck_assert_int_eq(hand->cards[3].rank, RANK_JOKER);
+    ck_assert_int_eq(hand->cards[3].suit, SUIT_NONE);
+}
+END_TEST
+
+START_TEST(test_hand_str) {
+    char buf[20];             // room for four cards
+
+    hand_t *hand = new_hand(6);
+    ck_assert_int_eq(hand->ncards, 0);
+    ck_assert_str_eq(hand_str(buf, 20, hand), "");
+
+    hand_append(hand, (card_t) {suit: SUIT_CLUB, rank: RANK_5});
+    ck_assert_int_eq(hand->ncards, 1);
+    ck_assert_str_eq(hand_str(buf, 20, hand), "5♣");
+
+    hand_append(hand, (card_t) {suit: SUIT_DIAMOND, rank: RANK_4});
+    ck_assert_int_eq(hand->ncards, 2);
+    ck_assert_str_eq(hand_str(buf, 20, hand), "5♣ 4♦");
+
+    hand_append(hand, (card_t) {suit: SUIT_DIAMOND, rank: RANK_4});
+    hand_append(hand, (card_t) {suit: SUIT_DIAMOND, rank: RANK_4});
+    ck_assert_int_eq(hand->ncards, 4);
+    ck_assert_str_eq(hand_str(buf, 20, hand), "5♣ 4♦ 4♦ 4♦");
+
+    // test truncation when converting into a too-small buffer
+    ck_assert_str_eq(hand_str(buf, 17, hand), "5♣ 4♦ 4♦ ");
+
+    free(hand);
+}
+END_TEST
+
+START_TEST(test_new_deck) {
+    deck_t* deck = new_deck();
+    ck_assert_int_eq(deck->ncards, 52);
+    ck_assert_int_eq(deck->cards[0].rank, RANK_ACE);
+    ck_assert_int_eq(deck->cards[0].suit, SUIT_CLUB);
+    ck_assert_int_eq(deck->cards[1].rank, RANK_ACE);
+    ck_assert_int_eq(deck->cards[1].suit, SUIT_DIAMOND);
+    ck_assert_int_eq(deck->cards[2].rank, RANK_ACE);
+    ck_assert_int_eq(deck->cards[2].suit, SUIT_HEART);
+    ck_assert_int_eq(deck->cards[3].rank, RANK_ACE);
+    ck_assert_int_eq(deck->cards[3].suit, SUIT_SPADE);
+    ck_assert_int_eq(deck->cards[51].rank, RANK_KING);
+    ck_assert_int_eq(deck->cards[51].suit, SUIT_SPADE);
+    free(deck);
+}
+
+/* test case: score */
 
 START_TEST(test_count_15s) {
     hand_t* hand = new_hand(5);
@@ -336,6 +396,8 @@ Suite* cribsum_suite(void) {
 
     tcase_add_test(tc_cards, test_card_string);
     tcase_add_test(tc_cards, test_card_cmp);
+    tcase_add_test(tc_cards, test_hand_delete);
+    tcase_add_test(tc_cards, test_hand_str);
     tcase_add_test(tc_cards, test_new_deck);
     suite_add_tcase(suite, tc_cards);
 

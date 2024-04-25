@@ -176,7 +176,7 @@ void hand_delete(hand_t *dest, int del_idx) {
 }
 
 void copy_hand(hand_t *dest, hand_t *src) {
-    assert(dest->size >= src->size);
+    assert(dest->size >= src->ncards);
     dest->ncards = src->ncards;
     memcpy(dest->cards, src->cards, sizeof(card_t) * src->ncards);
 }

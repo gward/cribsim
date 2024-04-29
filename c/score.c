@@ -162,7 +162,6 @@ uint count_right_jack(hand_t *hand) {
 score_t score_hand(hand_t *hand) {
     assert(hand->ncards > 0);
 
-    print_cards("scoring hand", hand->ncards, hand->cards);
     score_t score;
     score.fifteens = 2 * count_15s(hand);
     score.pairs = 2 * count_pairs(hand);

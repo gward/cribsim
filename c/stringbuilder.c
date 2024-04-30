@@ -8,32 +8,48 @@
 
 #include "stringbuilder.h"
 
-struct stringbuilder_s {
-    char *mem;
-    size_t count;
-    size_t cap;
-};
+bool sb_init(stringbuilder_t *sb, size_t init_cap) {
+    sb->cap = init_cap;
+    sb->count = 0;
+    sb->mem = calloc(init_cap, sizeof(char));
+    if (!sb->mem) {
+        sb->cap = 0;
+        return false;
+    }
+    return true;
+}
 
-typedef struct stringbuilder_s *stringbuilder_t;
+void sb_close(stringbuilder_t *sb)
+{
+    if (sb->mem != NULL) {
+        free(sb->mem);
+        sb->mem = NULL;
+    }
+    sb->cap = 0;
+    sb->count = 0;
+}
 
-stringbuilder_t sb_new(size_t init_cap) {
-    stringbuilder_t ret = malloc(sizeof(struct stringbuilder_s));
+stringbuilder_t *sb_new(size_t init_cap) {
+    stringbuilder_t *ret = malloc(sizeof(stringbuilder_t));
     if (!ret) {
         return NULL;
     }
-    ret->mem = calloc(init_cap, sizeof(char));
-    if (!ret->mem) {
+    bool ok = sb_init(ret, init_cap);
+    if (!ok) {
         free(ret);
         return NULL;
     }
-    ret->cap = init_cap;
-    ret->count = 0;
     return ret;
+}
+
+void sb_free(stringbuilder_t *sb) {
+    sb_close(sb);
+    free(sb);
 }
 
 #define LOAD_FACTOR 2
 
-bool sb_append(stringbuilder_t sb, char *s) {
+bool sb_append(stringbuilder_t *sb, char *s) {
     size_t len = strlen(s);
     if (sb->count + len > sb->cap) {
         size_t old_cap = sb->cap;
@@ -54,7 +70,7 @@ bool sb_append(stringbuilder_t sb, char *s) {
     return true;
 }
 
-bool sb_append_char(stringbuilder_t sb, char c) {
+bool sb_append_char(stringbuilder_t *sb, char c) {
     if (sb->count + 1 > sb->cap) {
         size_t old_cap = sb->cap;
         sb->cap *= LOAD_FACTOR;
@@ -69,11 +85,6 @@ bool sb_append_char(stringbuilder_t sb, char c) {
     return true;
 }
 
-char *sb_as_string(stringbuilder_t sb) {
+char *sb_as_string(stringbuilder_t *sb) {
     return sb->mem;
-}
-
-void sb_free(stringbuilder_t sb) {
-    free(sb->mem);
-    free(sb);
 }

@@ -6,12 +6,20 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-struct stringbuilder_s;
-typedef struct stringbuilder_s *stringbuilder_t;
-stringbuilder_t sb_new(size_t);
-bool sb_append(stringbuilder_t to, char *s);
-bool sb_append_char(stringbuilder_t, char);
-char *sb_as_string(stringbuilder_t);
-void sb_free(stringbuilder_t);
+typedef struct {
+    char *mem;
+    size_t count;
+    size_t cap;
+} stringbuilder_t;
+
+bool sb_init(stringbuilder_t *, size_t init_cap);
+void sb_close(stringbuilder_t *);
+
+stringbuilder_t *sb_new(size_t);
+void sb_free(stringbuilder_t *);
+
+bool sb_append(stringbuilder_t *, char *);
+bool sb_append_char(stringbuilder_t *, char);
+char *sb_as_string(stringbuilder_t *);
 
 #endif

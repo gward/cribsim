@@ -8,7 +8,7 @@
 
 typedef struct {
     char *mem;
-    size_t count;
+    size_t len;
     size_t cap;
 } stringbuilder_t;
 

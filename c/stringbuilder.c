@@ -10,7 +10,7 @@
 
 bool sb_init(stringbuilder_t *sb, size_t init_cap) {
     sb->cap = init_cap;
-    sb->count = 0;
+    sb->len = 0;
     sb->mem = calloc(init_cap, sizeof(char));
     if (!sb->mem) {
         sb->cap = 0;
@@ -26,7 +26,7 @@ void sb_close(stringbuilder_t *sb)
         sb->mem = NULL;
     }
     sb->cap = 0;
-    sb->count = 0;
+    sb->len = 0;
 }
 
 stringbuilder_t *sb_new(size_t init_cap) {
@@ -51,9 +51,9 @@ void sb_free(stringbuilder_t *sb) {
 
 bool sb_append(stringbuilder_t *sb, char *s) {
     size_t len = strlen(s);
-    if (sb->count + len > sb->cap) {
+    if (sb->len + len > sb->cap) {
         size_t old_cap = sb->cap;
-        while (sb->cap < sb->count + len) {
+        while (sb->cap < sb->len + len) {
             sb->cap *= LOAD_FACTOR;
         }
 
@@ -64,14 +64,14 @@ bool sb_append(stringbuilder_t *sb, char *s) {
         memset(new_mem + old_cap, 0, old_cap);
         sb->mem = new_mem;
     }
-    char *dst = stpncpy(sb->mem + sb->count, s, sb->cap - sb->count);
+    char *dst = stpncpy(sb->mem + sb->len, s, sb->cap - sb->len);
     assert(dst <= sb->mem + sb->cap);
-    sb->count += len;
+    sb->len += len;
     return true;
 }
 
 bool sb_append_char(stringbuilder_t *sb, char c) {
-    if (sb->count + 1 > sb->cap) {
+    if (sb->len + 1 > sb->cap) {
         size_t old_cap = sb->cap;
         sb->cap *= LOAD_FACTOR;
         char *new_mem = realloc(sb->mem, sb->cap);
@@ -81,7 +81,7 @@ bool sb_append_char(stringbuilder_t *sb, char c) {
         memset(new_mem + old_cap, 0, old_cap);
         sb->mem = new_mem;
     }
-    sb->mem[sb->count++] = c;
+    sb->mem[sb->len++] = c;
     return true;
 }
 

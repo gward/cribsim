@@ -33,38 +33,38 @@ stringbuilder_t sb_new(size_t init_cap) {
 
 #define LOAD_FACTOR 2
 
-bool sb_append(stringbuilder_t to, char *s) {
+bool sb_append(stringbuilder_t sb, char *s) {
     size_t len = strlen(s);
-    if (to->count + len > to->cap) {
-        size_t old_cap = to->cap;
-        while (to->cap < to->count + len) {
-            to->cap *= LOAD_FACTOR;
+    if (sb->count + len > sb->cap) {
+        size_t old_cap = sb->cap;
+        while (sb->cap < sb->count + len) {
+            sb->cap *= LOAD_FACTOR;
         }
 
-        char *new_mem = realloc(to->mem, to->cap);
+        char *new_mem = realloc(sb->mem, sb->cap);
         if (!new_mem) {
             return false;
         }
         memset(new_mem + old_cap, 0, old_cap);
-        to->mem = new_mem;
+        sb->mem = new_mem;
     }
-    char *dst = stpncpy(to->mem + to->count, s, to->cap - to->count);
-    assert(dst <= to->mem + to->cap);
-    to->count += len;
+    char *dst = stpncpy(sb->mem + sb->count, s, sb->cap - sb->count);
+    assert(dst <= sb->mem + sb->cap);
+    sb->count += len;
     return true;
 }
 
-bool sb_append_char(stringbuilder_t to, char c) {
-    to->mem[to->count] = c;
-    ++to->count;
-    if (to->count == to->cap) {
-        char *new_mem = realloc(to->mem, to->cap * LOAD_FACTOR);
+bool sb_append_char(stringbuilder_t sb, char c) {
+    sb->mem[sb->count] = c;
+    ++sb->count;
+    if (sb->count == sb->cap) {
+        char *new_mem = realloc(sb->mem, sb->cap * LOAD_FACTOR);
         if (!new_mem) {
             return false;
         }
-        memset(new_mem + to->cap, 0, to->cap);
-        to->mem = new_mem;
-        to->cap *= LOAD_FACTOR;
+        memset(new_mem + sb->cap, 0, sb->cap);
+        sb->mem = new_mem;
+        sb->cap *= LOAD_FACTOR;
     }
     return true;
 }

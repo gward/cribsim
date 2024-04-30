@@ -455,8 +455,8 @@ END_TEST
 /* test case: play */
 
 typedef struct {
-    char *hand_a;
-    char *hand_b;
+    char *hand_0;
+    char *hand_1;
     int expect_counts[MAX_ROUNDS];
     uint expect_points[2];
     char *expect_plays[MAX_ROUNDS];
@@ -468,8 +468,8 @@ static peg_test_t peg_tests[] = {
     // 2, A, 2, A, 4, A, 6, 8 -- until both are out. Dealer (player 1) gets
     // 1 point for the go.
     {
-        hand_a: "2♥ 2♥ 4♥ 6♥",
-        hand_b: "A♠ A♣ A♥ 8♠",
+        hand_0: "2♥ 2♥ 4♥ 6♥",
+        hand_1: "A♠ A♣ A♥ 8♠",
         expect_plays: {"2♥ A♠ 2♥ A♣ 4♥ A♥ 6♥ 8♠", NULL, NULL},
         expect_counts: {25, -1, -1},
         expect_points: {0, 1},
@@ -477,8 +477,8 @@ static peg_test_t peg_tests[] = {
 
     // Play A, 4, 3, 4, 3: 15 for player 0; then 6, 4, 6: 31 for player 1.
     {
-        hand_a: "A♥ 3♥ 3♦ 4♥",
-        hand_b: "4♠ 4♣ 6♥ 6♠",
+        hand_0: "A♥ 3♥ 3♦ 4♥",
+        hand_1: "4♠ 4♣ 6♥ 6♠",
         expect_plays: {"A♥ 4♠ 3♥ 4♣ 3♦ 6♥ 4♥ 6♠", NULL, NULL},
         expect_counts: {31, -1, -1},
         expect_points: {2, 2},
@@ -488,8 +488,8 @@ static peg_test_t peg_tests[] = {
     // Play 7: count is 31, 2 points to player 1, reset count to zero.
     // Play 10, 9, 10: count is 29, both players are out, 1 point to player 0.
     {
-        hand_a: "7♦ 8♣ 0♥ 0♣",
-        hand_b: "4♦ 5♥ 7♣ 9♣",
+        hand_0: "7♦ 8♣ 0♥ 0♣",
+        hand_1: "4♦ 5♥ 7♣ 9♣",
         expect_plays: {"7♦ 4♦ 8♣ 5♥ 7♣", "0♥ 9♣ 0♣", NULL},
         expect_counts: {31, 29, -1},
         expect_points: {1, 2},
@@ -499,8 +499,8 @@ static peg_test_t peg_tests[] = {
     // Play K, 0, K: count is 30, both blocked, 1 point to player 1.
     // Play 0, K: count is 20, both players are out, 1 point to player 1.
     {
-        hand_a: "0♣ 0♦ 0♥ 0♠",
-        hand_b: "K♣ K♦ K♥ K♠",
+        hand_0: "0♣ 0♦ 0♥ 0♠",
+        hand_1: "K♣ K♦ K♥ K♠",
         expect_plays: {"0♣ K♣ 0♦", "K♦ 0♥ K♥", "0♠ K♠"},
         expect_counts: {30, 30, 20},
         expect_points: {1, 2},
@@ -510,8 +510,8 @@ static peg_test_t peg_tests[] = {
     // Play 6, 9: count is 30, 1 point to player 1 for the go.
     // Play 7: count is 7, both players out, 1 point to player 0.
     {
-        hand_a: "2♣ 2♦ 2♥ 9♠",
-        hand_b: "4♥ 5♦ 6♦ 7♥",
+        hand_0: "2♣ 2♦ 2♥ 9♠",
+        hand_1: "4♥ 5♦ 6♦ 7♥",
         expect_plays: {"2♣ 4♥ 2♦ 5♦ 2♥ 6♦ 9♠", "7♥", NULL},
         expect_counts: {30, 7, -1},
         expect_points: {3, 1},
@@ -521,8 +521,8 @@ static peg_test_t peg_tests[] = {
     // Play 8: count is 23, player 0 blocked, 1 point to player 1.
     // Play K, 9: count is 19, both players out, 1 point to player 1.
     {
-        hand_a: "3♣ 5♦ 5♥ K♣",
-        hand_b: "A♦ A♠ 8♦ 9♥",
+        hand_0: "3♣ 5♦ 5♥ K♣",
+        hand_1: "A♦ A♠ 8♦ 9♥",
         expect_plays: {"3♣ A♦ 5♦ A♠ 5♥ 8♦", "K♣ 9♥", NULL},
         expect_counts: {23, 19, -1},
         expect_points: {2, 2},
@@ -532,8 +532,8 @@ static peg_test_t peg_tests[] = {
     // Play K, 7, K: count is 27, player 0 out, player 1 blocked: 1 point to player 0.
     // Play 9: count is 9, 1 point to player 1 for last card.
     {
-        hand_a: "J♦ J♥ K♣ K♥",
-        hand_b: "A♣ 5♦ 7♦ 9♦",
+        hand_0: "J♦ J♥ K♣ K♥",
+        hand_1: "A♣ 5♦ 7♦ 9♦",
         expect_plays: {"J♦ A♣ J♥ 5♦", "K♣ 7♦ K♥", "9♦"},
         expect_counts: {26, 27, 9},
         expect_points: {1, 2},
@@ -544,8 +544,8 @@ static peg_test_t peg_tests[] = {
     // Play 8, 8: count is 31, pair for player 0 (4 more points).
     // Play J, 8, Q: count is 28, last card for player 1 (1 point).
     {
-        hand_a: "6♠ 7♣ 8♥ 8♠",
-        hand_b: "2♠ 8♦ J♣ Q♦",
+        hand_0: "6♠ 7♣ 8♥ 8♠",
+        hand_1: "2♠ 8♦ J♣ Q♦",
         expect_plays: {"6♠ 2♠ 7♣ 8♦ 8♥", "J♣ 8♠ Q♦", NULL},
         expect_counts: {31, 28, -1},
         expect_points: {6, 1},
@@ -558,8 +558,8 @@ static peg_test_t peg_tests[] = {
     // Play 7: count is 31, 2 points plus 3 points for run of 3 to player 0.
     // Play J, Q: count is 20, 1 point to player 1 for last card.
     {
-        hand_a: "3♠ 5♣ 6♥ 7♠",
-        hand_b: "5♦ 5♠ J♣ Q♦",
+        hand_0: "3♠ 5♣ 6♥ 7♠",
+        hand_1: "5♦ 5♠ J♣ Q♦",
         expect_plays: {"3♠ 5♦ 5♣ 5♠ 6♥ 7♠", "J♣ Q♦", NULL},
         expect_counts: {31, 20, -1},
         expect_points: {7, 7},
@@ -569,8 +569,8 @@ static peg_test_t peg_tests[] = {
     // Play 6, 8: count is 29, player 1 blocked, 3 to player 0 for run, plus 1 for go.
     // Play 7, 9, K: count is 26, 1 point to player 1 for last card.
     {
-        hand_a: "6♦ 7♠ 8♥ 9♥",
-        hand_b: "2♣ 6♠ 7♥ K♣",
+        hand_0: "6♦ 7♠ 8♥ 9♥",
+        hand_1: "2♣ 6♠ 7♥ K♣",
         expect_plays: {"6♦ 2♣ 7♠ 6♠ 8♥", "7♥ 9♥ K♣", NULL},
         expect_counts: {29, 26, -1},
         expect_points: {6, 1},
@@ -578,9 +578,9 @@ static peg_test_t peg_tests[] = {
 };
 
 START_TEST(test_peg_hands) {
-    hand_t *hand_a = new_hand(4);
-    hand_t *hand_b = new_hand(4);
+    hand_t *hands[2] = {new_hand(4), new_hand(4)};
     peg_state_t *peg;
+    peg_func_t select_func[2] = {peg_select_low, peg_select_low};
 
     // This test is purely about counting points during pegging, not about
     // strategy. Deliberately using a naive and predictable strategy,
@@ -597,9 +597,9 @@ START_TEST(test_peg_hands) {
            tc.expect_points[0],
            tc.expect_points[1]);
 
-    parse_hand(hand_a, tc.hand_a);
-    parse_hand(hand_b, tc.hand_b);
-    peg = peg_hands(hand_a, hand_b, peg_select_low, peg_select_low);
+    parse_hand(hands[0], tc.hand_0);
+    parse_hand(hands[1], tc.hand_1);
+    peg = peg_hands(2, hands, select_func);
 
     printf("peg_tests[%d]: actual_counts={%d, %d, %d}, actual_points={%d, %d}\n",
            i,

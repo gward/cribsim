@@ -40,6 +40,6 @@ typedef int (*peg_func_t)(peg_state_t * peg, int player, int other);
 int peg_select_low(peg_state_t *peg, int player, int other);
 int peg_select_high(peg_state_t *peg, int player, int other);
 
-peg_state_t *peg_hands(hand_t *hand_a, hand_t *hand_b, peg_func_t select_a, peg_func_t select_b);
+peg_state_t *peg_hands(int nplayers, hand_t *hands[], peg_func_t select[]);
 
 #endif

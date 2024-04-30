@@ -265,24 +265,23 @@ uint peg_count_runs(peg_state_t *peg, int player) {
     return 0;
 }
 
-peg_state_t *peg_hands(hand_t *hand_a, hand_t *hand_b, peg_func_t select_a, peg_func_t select_b) {
-    assert(hand_a->ncards == hand_b->ncards);
-    uint ncards = hand_a->ncards;
+peg_state_t *peg_hands(int nplayers, hand_t *hands[], peg_func_t select[]) {
+    assert(nplayers == 2);
+    assert(hands[0]->ncards == hands[1]->ncards);
+    uint ncards = hands[0]->ncards;
     peg_state_t *peg = new_peg_state(ncards);
     int bufsize = ncards * 5;
     char buf1[bufsize], buf2[bufsize];
 
-    copy_hand(peg->avail[0], hand_a);
-    copy_hand(peg->avail[1], hand_b);
+    copy_hand(peg->avail[0], hands[0]);
+    copy_hand(peg->avail[1], hands[1]);
 
-    peg_func_t select[2] = {select_a, select_b};
+    log_debug("peg_hands(): hands[0]=%s, hands[1]=%s",
+              hand_str(buf1, bufsize, hands[0]),
+              hand_str(buf2, bufsize, hands[1]));
 
-    log_debug("peg_hands(): hand_a=%s, hand_b=%s",
-              hand_str(buf1, bufsize, hand_a),
-              hand_str(buf2, bufsize, hand_b));
-
-    // Start pegging from hand_a, aka player 0, aka avail[0]. This implies that
-    // player 1 (hand_b) is the dealer.
+    // Start pegging from hands[0], aka player 0, aka avail[0]. This implies that
+    // player 1 (hands[1]) is the dealer.
     int player = 1;
     int other = 0;
 
@@ -476,33 +475,32 @@ void play_hand(deck_t *deck) {
     int nplayers = 2;
     int ncards = 6;
 
-    hand_t *hand_a = new_hand(ncards);
-    hand_t *hand_b = new_hand(ncards);
+    hand_t *hands[2];
+    hands[0] = new_hand(ncards);
+    hands[1] = new_hand(ncards);
     hand_t *crib = new_hand(5);
-    log_debug("hand_a = %p %d", hand_a, hand_a->ncards);
-    log_debug("hand_b = %p %d", hand_b, hand_b->ncards);
 
     // Deal the hands.
     int deck_offset = 0;
     for (int i = 0; i < ncards; i++) {
-        hand_append(hand_a, deck->cards[deck_offset++]);
-        hand_append(hand_b, deck->cards[deck_offset++]);
+        hand_append(hands[0], deck->cards[deck_offset++]);
+        hand_append(hands[1], deck->cards[deck_offset++]);
     }
     assert(deck->ncards - deck_offset == 40);
 
-    sort_cards(hand_a->ncards, hand_a->cards);
-    sort_cards(hand_b->ncards, hand_b->cards);
+    sort_cards(hands[0]->ncards, hands[0]->cards);
+    sort_cards(hands[1]->ncards, hands[1]->cards);
 
-    log_cards("hand_a after deal and sort", hand_a->ncards, hand_a->cards);
-    log_cards("hand_b after deal and sort", hand_b->ncards, hand_b->cards);
+    log_cards("hands[0] after deal and sort", hands[0]->ncards, hands[0]->cards);
+    log_cards("hands[1] after deal and sort", hands[1]->ncards, hands[1]->cards);
     assert(deck_offset == ncards * nplayers);
     deck->offset = deck_offset;
 
     // Play two different strategies for discarding cards.
-    discard_simple(hand_a, crib);
-    discard_random(hand_b, crib);
-    log_cards("hand_a after discard", hand_a->ncards, hand_a->cards);
-    log_cards("hand_b after discard", hand_b->ncards, hand_b->cards);
+    discard_simple(hands[0], crib);
+    discard_random(hands[1], crib);
+    log_cards("hands[0] after discard", hands[0]->ncards, hands[0]->cards);
+    log_cards("hands[1] after discard", hands[1]->ncards, hands[1]->cards);
     log_cards("crib after discard", crib->ncards, crib->cards);
 
     // Turn up the starter card.
@@ -512,25 +510,26 @@ void play_hand(deck_t *deck) {
     char buf[5];
     log_debug("starter: deck[%d] = %s", starter_idx, card_str(buf, starter));
 
-    peg_state_t *peg = peg_hands(hand_a, hand_b, peg_select_low, peg_select_low);
-    log_debug("peg result: %d points to hand_a, %d points to hand_b",
+    peg_func_t select_func[2] = {peg_select_low, peg_select_low};
+    peg_state_t *peg = peg_hands(nplayers, hands, select_func);
+    log_debug("peg result: %d points to hands[0], %d points to hands[1]",
               peg->points[0],
               peg->points[1]);
     peg_state_free(peg);
 
     // Add starter to each hand and the crib, and score all three.
-    add_starter(hand_a, starter);
-    add_starter(hand_b, starter);
+    add_starter(hands[0], starter);
+    add_starter(hands[1], starter);
     add_starter(crib, starter);
 
-    score_t score_a = score_hand(hand_a);
-    score_log("hand_a with starter", score_a);
-    score_t score_b = score_hand(hand_b);
-    score_log("hand_b with starter", score_b);
+    score_t score_0 = score_hand(hands[0]);
+    score_log("hands[0] with starter", score_0);
+    score_t score_1 = score_hand(hands[1]);
+    score_log("hands[1] with starter", score_1);
     score_t score_crib = score_hand(crib);
     score_log("crib with starter ", score_crib);
 
-    free(hand_b);
-    free(hand_a);
+    free(hands[0]);
+    free(hands[1]);
     free(crib);
 }

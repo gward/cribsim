@@ -86,16 +86,16 @@ static void parse_hand(hand_t *dest, char cards[]) {
 
 static void assert_stringbuilder(stringbuilder_t *sb, char *expect_str, size_t expect_cap) {
     size_t expect_len = strlen(expect_str);
+    ck_assert_str_eq(sb_as_string(sb), expect_str);
     ck_assert_int_eq(strlen(sb->mem), expect_len);
     ck_assert_int_eq((int) sb->mem[0], (int) expect_str[0]);
     ck_assert_int_eq((int) sb->mem[expect_len - 1], (int) expect_str[expect_len - 1]);
     ck_assert_int_eq((int) sb->mem[expect_len], 0);
     ck_assert_int_eq(sb->len, expect_len);
     ck_assert_int_eq(sb->cap, expect_cap);
-    ck_assert_str_eq(sb_as_string(sb), expect_str);
 }
 
-START_TEST(test_stringbuilder) {
+START_TEST(test_stringbuilder_basics) {
     stringbuilder_t sb;
     sb_init(&sb, 1);
 
@@ -118,6 +118,42 @@ START_TEST(test_stringbuilder) {
     // Same thing, but as a single string append.
     sb_append(&sb, "this is a moderately long string");
     assert_stringbuilder(&sb, "this is a moderately long string", 64);
+}
+END_TEST
+
+START_TEST(test_stringbuilder_printf) {
+    stringbuilder_t sb;
+    sb_init(&sb, 8);
+
+    sb_printf(&sb,
+              "hello %s, my name is %s and I am %.1f years old",
+              "world",
+              "bob",
+              37.59);
+    assert_stringbuilder(&sb,
+                         "hello world, my name is bob and I am 37.6 years old",
+                         64);
+}
+
+START_TEST(test_stringbuilder_append_int) {
+    stringbuilder_t sb;
+    sb_init(&sb, 20);
+
+    // Exercise sb_append_int() without having to expand the buffer.
+    sb_append_int(&sb, 234254);
+    sb_append_char(&sb, ',');
+    sb_append_int(&sb, -549202);
+    assert_stringbuilder(&sb, "234254,-549202", 20);
+
+    // Same, but this time the buffer has to grow.
+    sb_close(&sb);
+    sb_init(&sb, 1);
+    sb_append_int(&sb, -234254);
+    assert_stringbuilder(&sb, "-234254", 8);
+    sb_append(&sb, " , ");
+    assert_stringbuilder(&sb, "-234254 , ", 16);
+    sb_append_int(&sb, 938682);
+    assert_stringbuilder(&sb, "-234254 , 938682", 32);
 }
 END_TEST
 
@@ -616,7 +652,9 @@ Suite *cribsum_suite(void) {
     TCase *tc_score = tcase_create("score");
     TCase *tc_play = tcase_create("play");
 
-    tcase_add_test(tc_stringbuilder, test_stringbuilder);
+    tcase_add_test(tc_stringbuilder, test_stringbuilder_basics);
+    tcase_add_test(tc_stringbuilder, test_stringbuilder_printf);
+    tcase_add_test(tc_stringbuilder, test_stringbuilder_append_int);
     suite_add_tcase(suite, tc_stringbuilder);
 
     tcase_add_test(tc_cards, test_card_string);

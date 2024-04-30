@@ -3,6 +3,8 @@
 #define _POSIX_C_SOURCE 200809L    // for stpncpy()
 
 #include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -49,10 +51,9 @@ void sb_free(stringbuilder_t *sb) {
 
 #define LOAD_FACTOR 2
 
-bool sb_append(stringbuilder_t *sb, char *s) {
-    size_t len = strlen(s);
+static bool sb_fit_buffer(stringbuilder_t *sb, size_t new_len) {
     size_t old_cap = sb->cap;
-    while (sb->cap <= sb->len + len) {
+    while (sb->cap <= new_len) {
         sb->cap *= LOAD_FACTOR;
     }
     if (sb->cap != old_cap) {
@@ -63,6 +64,14 @@ bool sb_append(stringbuilder_t *sb, char *s) {
         memset(new_mem + old_cap, 0, old_cap);
         sb->mem = new_mem;
     }
+    return true;
+}
+
+bool sb_append(stringbuilder_t *sb, char *s) {
+    size_t len = strlen(s);
+    if (!sb_fit_buffer(sb, sb->len + len)) {
+        return false;
+    }
 
     char *dst = stpncpy(sb->mem + sb->len, s, sb->cap - sb->len);
     assert(dst <= sb->mem + sb->cap);
@@ -71,18 +80,39 @@ bool sb_append(stringbuilder_t *sb, char *s) {
 }
 
 bool sb_append_char(stringbuilder_t *sb, char c) {
-    if (sb->cap <= sb->len + 1) {
-        size_t old_cap = sb->cap;
-        sb->cap *= LOAD_FACTOR;
-        char *new_mem = realloc(sb->mem, sb->cap);
-        if (!new_mem) {
-            return false;
-        }
-        memset(new_mem + old_cap, 0, old_cap);
-        sb->mem = new_mem;
+    if (!sb_fit_buffer(sb, sb->len + 1)) {
+        return false;
     }
     sb->mem[sb->len++] = c;
     return true;
+}
+
+bool sb_printf(stringbuilder_t *sb, const char *fmt, ...) {
+    va_list args;
+
+    size_t avail = sb->cap - sb->len;   // includes terminating null byte
+    va_start(args, fmt);
+    int nbytes = vsnprintf(sb->mem + sb->len, avail, fmt, args);
+    va_end(args);
+
+    if (nbytes >= avail) {
+        // Buffer is too small: expand it and try again.
+        if (!sb_fit_buffer(sb, sb->len + nbytes)) {
+            return false;
+        }
+
+        avail = sb->cap - sb->len;
+        va_start(args, fmt);
+        int nbytes = vsnprintf(sb->mem + sb->len, avail, fmt, args);
+        va_end(args);
+        assert(nbytes < avail);
+    }
+    sb->len += nbytes;
+    return true;
+}
+
+bool sb_append_int(stringbuilder_t *sb, int n) {
+    return sb_printf(sb, "%d", n);
 }
 
 char *sb_as_string(stringbuilder_t *sb) {

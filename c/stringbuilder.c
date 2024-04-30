@@ -55,17 +55,17 @@ bool sb_append(stringbuilder_t sb, char *s) {
 }
 
 bool sb_append_char(stringbuilder_t sb, char c) {
-    sb->mem[sb->count] = c;
-    ++sb->count;
-    if (sb->count == sb->cap) {
-        char *new_mem = realloc(sb->mem, sb->cap * LOAD_FACTOR);
+    if (sb->count + 1 > sb->cap) {
+        size_t old_cap = sb->cap;
+        sb->cap *= LOAD_FACTOR;
+        char *new_mem = realloc(sb->mem, sb->cap);
         if (!new_mem) {
             return false;
         }
-        memset(new_mem + sb->cap, 0, sb->cap);
+        memset(new_mem + old_cap, 0, old_cap);
         sb->mem = new_mem;
-        sb->cap *= LOAD_FACTOR;
     }
+    sb->mem[sb->count++] = c;
     return true;
 }
 

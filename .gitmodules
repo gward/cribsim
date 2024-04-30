@@ -1,0 +1,3 @@
+[submodule "c/rxilog"]
+	path = c/rxilog
+	url = git@github.com:rxi/log.c.git

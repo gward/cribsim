@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "cards.h"
+#include "log.h"
 #include "score.h"
 #include "twiddle.h"
 
@@ -73,11 +74,11 @@ uint count_runs(hand_t *hand) {
         else if (prev_rank < RANK_QUEEN && cur_rank > prev_rank + 1) {
             if (current_run >= 3) {
                 run_points += current_run * repeats;
-                printf("run ended at i=%d: current_run=%d, repeats=%d, run_points=%d\n",
-                       i,
-                       current_run,
-                       repeats,
-                       run_points);
+                log_debug("run ended at i=%d: current_run=%d, repeats=%d, run_points=%d",
+                          i,
+                          current_run,
+                          repeats,
+                          run_points);
             }
             current_run = 1;
             repeats = 1;
@@ -87,11 +88,11 @@ uint count_runs(hand_t *hand) {
     // Fall off the end also counts as the end of a run.
     if (current_run >= 3) {
         run_points += current_run * repeats;
-        printf("run ended at i=%d: current_run=%d, repeats=%d, run_points=%d\n",
-               i,
-               current_run,
-               repeats,
-               run_points);
+        log_debug("run ended at i=%d: current_run=%d, repeats=%d, run_points=%d",
+                  i,
+                  current_run,
+                  repeats,
+                  run_points);
     }
 
     return run_points;

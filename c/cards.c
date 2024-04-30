@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "cards.h"
+#include "log.h"
 
 /* Map member of the rank_t enum to the value of that card when
  * counting 15s or pegging.
@@ -69,18 +70,35 @@ int card_cmp(card_t *card_a, card_t *card_b) {
     return val_a - val_b;
 }
 
-void print_cards(char *prefix, int ncards, card_t cards[]) {
+void log_cards(char *prefix, int ncards, card_t cards[]) {
     char debug_str[5];
     char friendly_str[5];
+    size_t size = (16 * ncards) + 1;    // "99: 04:1 = 4♣\n" is 16 bytes
     if (prefix != NULL) {
-        printf("%s:\n", prefix);
+        size += strlen(prefix) + 1 + 1; // + 1 for newline, + 1 for nul
+    }
+
+    char buf[size];
+    size_t offset = 0;
+    int nbytes;
+
+    if (prefix != NULL) {
+        nbytes = snprintf(buf + offset, size - offset, "%s:\n", prefix);
+        assert(nbytes < size - offset);      // blow up if truncated
+        offset += nbytes;
     }
     for (int i = 0; i < ncards; i++) {
-        printf("%2d: %s = %s\n",
-               i,
-               card_debug(debug_str, cards[i]),
-               card_str(friendly_str, cards[i]));
+        nbytes = snprintf(buf + offset,
+                          size - offset,
+                          "%2d: %s = %s\n",
+                          i,
+                          card_debug(debug_str, cards[i]),
+                          card_str(friendly_str, cards[i]));
+        assert(nbytes < size - offset);
+        offset += nbytes;
     }
+    buf[offset - 1] = 0;     // kill final newline
+    log_debug(buf);
 }
 
 static int cmp_cards(const void *a, const void *b) {

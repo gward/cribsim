@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "log.h"
 #include "play.h"
 #include "score.h"
 #include "twiddle.h"
@@ -50,31 +51,44 @@ void eval_candidate_simple(int ncards, int indexes[], void *_data) {
     assert(candidate->size == ncards);
     assert(winner->size >= ncards);
 
-    printf("eval_candidate_simple: {");
+    size_t size = 50;
+    int offset = 0;
+    char buf[size];
+    strncpy(buf, "eval_candidate_simple: {", size);
+    offset = strlen(buf);
     for (int i = 0; i < ncards; i++) {
-        printf("%d%c", indexes[i], (i == ncards - 1) ? '}' : ',');
+        int nbytes = snprintf(buf + offset, size - offset, "%d", indexes[i]);
+        assert(nbytes < size - offset);
+        offset += nbytes;
+        if (i < ncards - 1) {
+            assert(size - offset >= 1);
+            buf[offset] = ',';
+            offset++;
+        }
     }
-    putchar('\n');
+    assert(size - offset >= 1);
+    strncpy(buf + offset, "}", size - offset);
+    log_trace(buf);
 
     hand_truncate(candidate);
     for (int i = 0; i < ncards; i++) {
         hand_append(candidate, input->cards[indexes[i]]);
     }
-    print_cards("candidate hand", candidate->ncards, candidate->cards);
+    log_cards("candidate hand", candidate->ncards, candidate->cards);
 
     score_t score = score_hand(candidate);
     if (score.total > data->top_score) {
         // Ignore ties -- just use the first candidate to get to the top.
-        printf("new winner: top_score = %d, score = %d\n",
-               data->top_score,
-               score.total);
+        log_debug("new winner: top_score = %d, score = %d",
+                  data->top_score,
+                  score.total);
         data->top_score = score.total;
         copy_hand(winner, candidate);
     }
     else {
-        printf("no change: top_score = %d, score = %d\n",
-               data->top_score,
-               score.total);
+        log_debug("no change: top_score = %d, score = %d",
+                  data->top_score,
+                  score.total);
     }
 }
 
@@ -107,7 +121,7 @@ void discard_simple(hand_t *hand, hand_t *crib) {
         }
     }
 
-    print_cards("winning candidate", winner->ncards, winner->cards);
+    log_cards("winning candidate", winner->ncards, winner->cards);
     copy_hand(hand, winner);
 
     free(winner);
@@ -120,7 +134,7 @@ void discard_random(hand_t *hand, hand_t *crib) {
     drop1 = rand() % hand->ncards;
     while ((drop2 = rand() % hand->ncards) == drop1) {
     }
-    printf("discard_random: drop1=%d, drop2=%d\n", drop1, drop2);
+    log_trace("discard_random: drop1=%d, drop2=%d", drop1, drop2);
 
     hand_append(crib, hand->cards[drop1]);
     hand_append(crib, hand->cards[drop2]);
@@ -205,10 +219,10 @@ uint peg_count_pairs(peg_state_t *peg, int player) {
         }
     }
     if (pair_points > 0) {
-        printf("  found %d-of-a-kind, %d points to player %d\n",
-               same_rank,
-               pair_points,
-               player);
+        log_trace("  found %d-of-a-kind, %d points to player %d",
+                  same_rank,
+                  pair_points,
+                  player);
     }
     return pair_points;
 }
@@ -241,10 +255,10 @@ uint peg_count_runs(peg_state_t *peg, int player) {
             prev_rank = candidate[i].rank;
         }
         if (found_run > 0) {
-            printf("  found run of %d: %d points to player %d\n",
-                   found_run,
-                   found_run,
-                   player);
+            log_trace("  found run of %d: %d points to player %d",
+                      found_run,
+                      found_run,
+                      player);
             return found_run;
         }
     }
@@ -263,9 +277,9 @@ peg_state_t *peg_hands(hand_t *hand_a, hand_t *hand_b, peg_func_t select_a, peg_
 
     peg_func_t select[2] = {select_a, select_b};
 
-    printf("peg_hands(): hand_a=%s, hand_b=%s\n",
-           hand_str(buf1, bufsize, hand_a),
-           hand_str(buf2, bufsize, hand_b));
+    log_debug("peg_hands(): hand_a=%s, hand_b=%s",
+              hand_str(buf1, bufsize, hand_a),
+              hand_str(buf2, bufsize, hand_b));
 
     // Start pegging from hand_a, aka player 0, aka avail[0]. This implies that
     // player 1 (hand_b) is the dealer.
@@ -306,10 +320,10 @@ peg_state_t *peg_hands(hand_t *hand_a, hand_t *hand_b, peg_func_t select_a, peg_
 
         // Current player is out of cards.
         if (player_left == 0) {
-            printf("  player %d out: try the other player\n", player);
+            log_trace("  player %d out: try the other player", player);
 
             if (blocked[other]) {
-                printf("  but player %d blocked: need reset\n", other);
+                log_trace("  but player %d blocked: need reset", other);
                 need_reset = true;
             }
             continue;
@@ -318,8 +332,8 @@ peg_state_t *peg_hands(hand_t *hand_a, hand_t *hand_b, peg_func_t select_a, peg_
         // Both players blocked, but at least one has cards left: reset the
         // count and continue pegging.
         if (blocked[player] && blocked[other] && total_left > 0) {
-            printf("  both players blocked, still have %d cards left: need reset\n",
-                   total_left);
+            log_trace("  both players blocked, still have %d cards left: need reset",
+                      total_left);
             need_reset = true;
             continue;
         }
@@ -329,13 +343,17 @@ peg_state_t *peg_hands(hand_t *hand_a, hand_t *hand_b, peg_func_t select_a, peg_
         // Current player selects a card to play -- or decides that they are blocked.
         int selected = select[player](peg, player, other);
         if (selected == -1) {
-            printf("  player %d says go (is blocked)", player);
+            log_trace("  player %d says go (is blocked)", player);
             if (!blocked[other]) {
-                printf(": 1 point to player %d\n", other);
+                log_trace("  player %d blocked: 1 point to player %d",
+                          player,
+                          other);
                 peg->points[other]++;
             }
             else {
-                printf(": no points to player %d (already blocked)\n", other);
+                log_trace("  player %d blocked: no points to player %d (already blocked)",
+                          player,
+                          other);
             }
             blocked[player] = true;
             continue;
@@ -350,39 +368,60 @@ peg_state_t *peg_hands(hand_t *hand_a, hand_t *hand_b, peg_func_t select_a, peg_
         hand_append(peg->cur_played, card);
         peg->cur_count += rank_value[card.rank];
         assert(peg->cur_count <= 31);       // make sure select() does not break the rules
-        printf("  player %d played card %s, cur_count=%d",
-               player,
-               card_str(buf1, card),
-               peg->cur_count);
 
         // Anything interesting about the count?
         if (peg->cur_count == 15) {
-            printf(" (2 points)");
+            log_trace("  player %d played card %s, cur_count=%d: 2 points to player %d",
+                      player,
+                      card_str(buf1, card),
+                      peg->cur_count,
+                      player);
             peg->points[player] += 2;
         }
         else if (peg->cur_count == 31) {
             if (blocked[other]) {
-                printf(" (1 point because player %d is blocked", other);
+                log_trace("  player %d played card %s, cur_count=%d: "
+                          "1 point to player %d because player %d is blocked",
+                          player,
+                          card_str(buf1, card),
+                          peg->cur_count,
+                          player,
+                          other);
                 peg->points[player] += 1;
             }
             else if (other_left == 0 && peg->avail[player]->ncards == 0) {
-                printf(" (1 point because player %d just played last card", player);
+                log_trace("  player %d played card %s, cur_count=%d: 1 point to player %d for last card",
+                          player,
+                          card_str(buf1, card),
+                          peg->cur_count,
+                          player);
                 peg->points[player] += 1;
             }
             else {
-                printf(" (2 points");
+                log_trace("  player %d played card %s, cur_count=%d: 2 points to player %d",
+                          player,
+                          card_str(buf1, card),
+                          peg->cur_count,
+                          player);
                 peg->points[player] += 2;
             }
 
             if (peg->avail[player]->ncards > 0) {
-                printf(", need reset)");
                 need_reset = true;
             }
-            else {
-                printf(")");
-            }
         }
-        printf(", points={%d, %d}\n", peg->points[0], peg->points[1]);
+        else {
+            log_trace("  player %d played card %s, cur_count=%d",
+                      player,
+                      card_str(buf1, card),
+                      peg->cur_count);
+        }
+
+
+        log_trace("  need_reset=%d, points={%d, %d}",
+                  need_reset,
+                  peg->points[0],
+                  peg->points[1]);
 
         // Check for M-of-a-kind.
         uint pair_points = peg_count_pairs(peg, player);
@@ -394,7 +433,7 @@ peg_state_t *peg_hands(hand_t *hand_a, hand_t *hand_b, peg_func_t select_a, peg_
 
         // Check for last card.
         if (other_left == 0 && peg->avail[player]->ncards == 0) {
-            printf("  player %d played last card: 1 point, done pegging\n", player);
+            log_trace("  player %d played last card: 1 point, done pegging", player);
             peg->points[player]++;
             break;
         }
@@ -440,8 +479,8 @@ void play_hand(deck_t *deck) {
     hand_t *hand_a = new_hand(ncards);
     hand_t *hand_b = new_hand(ncards);
     hand_t *crib = new_hand(5);
-    printf("hand_a = %p %d\n", hand_a, hand_a->ncards);
-    printf("hand_b = %p %d\n", hand_b, hand_b->ncards);
+    log_debug("hand_a = %p %d", hand_a, hand_a->ncards);
+    log_debug("hand_b = %p %d", hand_b, hand_b->ncards);
 
     // Deal the hands.
     int deck_offset = 0;
@@ -454,27 +493,29 @@ void play_hand(deck_t *deck) {
     sort_cards(hand_a->ncards, hand_a->cards);
     sort_cards(hand_b->ncards, hand_b->cards);
 
-    print_cards("hand_a after deal and sort", hand_a->ncards, hand_a->cards);
-    print_cards("hand_b after deal and sort", hand_b->ncards, hand_b->cards);
+    log_cards("hand_a after deal and sort", hand_a->ncards, hand_a->cards);
+    log_cards("hand_b after deal and sort", hand_b->ncards, hand_b->cards);
     assert(deck_offset == ncards * nplayers);
     deck->offset = deck_offset;
 
     // Play two different strategies for discarding cards.
     discard_simple(hand_a, crib);
     discard_random(hand_b, crib);
-    print_cards("hand_a after discard", hand_a->ncards, hand_a->cards);
-    print_cards("hand_b after discard", hand_b->ncards, hand_b->cards);
-    print_cards("crib after discard", crib->ncards, crib->cards);
+    log_cards("hand_a after discard", hand_a->ncards, hand_a->cards);
+    log_cards("hand_b after discard", hand_b->ncards, hand_b->cards);
+    log_cards("crib after discard", crib->ncards, crib->cards);
 
     // Turn up the starter card.
     int starter_idx = rand() % (deck->ncards - deck->offset);
     starter_idx += deck->offset;
     card_t starter = deck->cards[starter_idx];
     char buf[5];
-    printf("starter: deck[%d] = %s\n", starter_idx, card_str(buf, starter));
+    log_debug("starter: deck[%d] = %s", starter_idx, card_str(buf, starter));
 
     peg_state_t *peg = peg_hands(hand_a, hand_b, peg_select_low, peg_select_low);
-    printf("peg result: points_a=%d, points_b=%d\n", peg->points[0], peg->points[1]);
+    log_debug("peg result: %d points to hand_a, %d points to hand_b",
+              peg->points[0],
+              peg->points[1]);
     peg_state_free(peg);
 
     // Add starter to each hand and the crib, and score all three.

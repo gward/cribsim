@@ -4,6 +4,7 @@
 #include "cards.h"
 #include "log.h"
 #include "score.h"
+#include "stringbuilder.h"
 #include "twiddle.h"
 
 typedef struct {
@@ -174,34 +175,55 @@ score_t score_hand(hand_t *hand) {
     return score;
 }
 
-void score_print(char *prefix, score_t score) {
+void score_log(char *prefix, score_t score) {
+    stringbuilder_t sb;
+    sb_init(&sb, 64);
+
     if (prefix != NULL) {
-        printf("%s: ", prefix);
+        sb_append(&sb, prefix);
+        sb_append(&sb, ": ");
     }
-    //char *post = (score.total == 0 ? "" : " (");
-    printf("%d", score.total);
+    sb_append_int(&sb, score.total);
     char *sep = " (";
     if (score.fifteens > 0) {
-        printf("%s%d fifteen(s) for %d", sep, score.fifteens / 2, score.fifteens);
+        sb_printf(&sb,
+                  "%s%d fifteen(s) for %d",
+                  sep,
+                  score.fifteens / 2,
+                  score.fifteens);
         sep = ", ";
     }
     if (score.pairs > 0) {
-        printf("%s%d pair(s) for %d", sep, score.pairs / 2, score.pairs);
+        sb_printf(&sb,
+                  "%s%d pair(s) for %d",
+                  sep,
+                  score.pairs / 2,
+                  score.pairs);
         sep = ", ";
     }
     if (score.runs > 0) {
-        printf("%srun(s) for %d", sep, score.runs);
+        sb_printf(&sb,
+                  "%srun(s) for %d",
+                  sep,
+                  score.runs);
         sep = ", ";
     }
     if (score.flush > 0) {
-        printf("%sflush for %d", sep, score.flush);
+        sb_printf(&sb,
+                  "%sflush for %d",
+                  sep,
+                  score.flush);
         sep = ", ";
     }
     if (score.right_jack > 0) {
-        printf("%sright jack for %d", sep, score.right_jack);
+        sb_printf(&sb,
+                  "%sright jack for %d",
+                  sep,
+                  score.right_jack);
     }
     if (score.total > 0) {
-        putchar(')');
+        sb_append_char(&sb, ')');
     }
-    putchar('\n');
+    log_info(sb_as_string(&sb));
+    sb_close(&sb);
 }

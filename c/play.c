@@ -524,11 +524,11 @@ void play_hand(deck_t *deck) {
     add_starter(crib, starter);
 
     score_t score_a = score_hand(hand_a);
-    score_print("hand_a with starter", score_a);
+    score_log("hand_a with starter", score_a);
     score_t score_b = score_hand(hand_b);
-    score_print("hand_b with starter", score_b);
+    score_log("hand_b with starter", score_b);
     score_t score_crib = score_hand(crib);
-    score_print("crib with starter ", score_crib);
+    score_log("crib with starter ", score_crib);
 
     free(hand_b);
     free(hand_a);

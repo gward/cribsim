@@ -20,6 +20,6 @@ uint count_flush(hand_t *hand);
 uint count_right_jack(hand_t *hand);
 
 score_t score_hand(hand_t *hand);
-void score_print(char *prefix, score_t score);
+void score_log(char *prefix, score_t score);
 
 #endif

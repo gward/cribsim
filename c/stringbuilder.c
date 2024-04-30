@@ -51,12 +51,11 @@ void sb_free(stringbuilder_t *sb) {
 
 bool sb_append(stringbuilder_t *sb, char *s) {
     size_t len = strlen(s);
-    if (sb->len + len > sb->cap) {
-        size_t old_cap = sb->cap;
-        while (sb->cap < sb->len + len) {
-            sb->cap *= LOAD_FACTOR;
-        }
-
+    size_t old_cap = sb->cap;
+    while (sb->cap <= sb->len + len) {
+        sb->cap *= LOAD_FACTOR;
+    }
+    if (sb->cap != old_cap) {
         char *new_mem = realloc(sb->mem, sb->cap);
         if (!new_mem) {
             return false;
@@ -64,6 +63,7 @@ bool sb_append(stringbuilder_t *sb, char *s) {
         memset(new_mem + old_cap, 0, old_cap);
         sb->mem = new_mem;
     }
+
     char *dst = stpncpy(sb->mem + sb->len, s, sb->cap - sb->len);
     assert(dst <= sb->mem + sb->cap);
     sb->len += len;
@@ -71,7 +71,7 @@ bool sb_append(stringbuilder_t *sb, char *s) {
 }
 
 bool sb_append_char(stringbuilder_t *sb, char c) {
-    if (sb->len + 1 > sb->cap) {
+    if (sb->cap <= sb->len + 1) {
         size_t old_cap = sb->cap;
         sb->cap *= LOAD_FACTOR;
         char *new_mem = realloc(sb->mem, sb->cap);

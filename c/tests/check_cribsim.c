@@ -3,7 +3,9 @@
 
 #include <check.h>
 
+#include "../cards.h"
 #include "../score.h"
+#include "../stringbuilder.h"
 #include "../play.h"
 
 /* Parse a string like "A♥ 3♥ 5♠ 6♦" into cards, and use it to populate hand. */
@@ -79,6 +81,45 @@ static void parse_hand(hand_t *dest, char cards[]) {
     }
 
 }
+
+/* test case: stringbuilder */
+
+static void assert_stringbuilder(stringbuilder_t *sb, char *expect_str, size_t expect_cap) {
+    size_t expect_len = strlen(expect_str);
+    ck_assert_int_eq(strlen(sb->mem), expect_len);
+    ck_assert_int_eq((int) sb->mem[0], (int) expect_str[0]);
+    ck_assert_int_eq((int) sb->mem[expect_len - 1], (int) expect_str[expect_len - 1]);
+    ck_assert_int_eq((int) sb->mem[expect_len], 0);
+    ck_assert_int_eq(sb->len, expect_len);
+    ck_assert_int_eq(sb->cap, expect_cap);
+    ck_assert_str_eq(sb_as_string(sb), expect_str);
+}
+
+START_TEST(test_stringbuilder) {
+    stringbuilder_t sb;
+    sb_init(&sb, 1);
+
+    ck_assert_int_eq(sb.len, 0);
+    ck_assert_int_eq(sb.cap, 1);
+    ck_assert_str_eq(sb_as_string(&sb), "");
+
+    // A 31-byte string fits comfortable, as long as we double the capacity
+    // (buffer size) several times.
+    sb_append(&sb, "this is a moderately long strin");
+    assert_stringbuilder(&sb, "this is a moderately long strin", 32);
+
+    // Add one more byte and we have to double the capacity again.
+    sb_append_char(&sb, 'g');
+    assert_stringbuilder(&sb, "this is a moderately long string", 64);
+
+    sb_close(&sb);
+    sb_init(&sb, 1);
+
+    // Same thing, but as a single string append.
+    sb_append(&sb, "this is a moderately long string");
+    assert_stringbuilder(&sb, "this is a moderately long string", 64);
+}
+END_TEST
 
 /* test case: cards */
 
@@ -570,9 +611,13 @@ END_TEST
 
 Suite *cribsum_suite(void) {
     Suite *suite = suite_create("cribsim");
+    TCase *tc_stringbuilder = tcase_create("stringbuilder");
     TCase *tc_cards = tcase_create("cards");
     TCase *tc_score = tcase_create("score");
     TCase *tc_play = tcase_create("play");
+
+    tcase_add_test(tc_stringbuilder, test_stringbuilder);
+    suite_add_tcase(suite, tc_stringbuilder);
 
     tcase_add_test(tc_cards, test_card_string);
     tcase_add_test(tc_cards, test_card_cmp);

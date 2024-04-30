@@ -7,9 +7,9 @@
 #include "../play.h"
 
 /* Parse a string like "A♥ 3♥ 5♠ 6♦" into cards, and use it to populate hand. */
-static void parse_hand(hand_t* dest, char cards[]) {
+static void parse_hand(hand_t *dest, char cards[]) {
     hand_truncate(dest);
-    char* next = cards + 0;
+    char *next = cards + 0;
     int i = 0;
     while (*next != '\0') {
         for (; *next == ' '; next++) {
@@ -53,7 +53,7 @@ static void parse_hand(hand_t* dest, char cards[]) {
             abort();
         }
 
-        char* suit_str = next;
+        char *suit_str = next;
 
         if (strncmp(suit_str, "♣", 3) == 0) {
             card.suit = SUIT_CLUB;
@@ -183,7 +183,7 @@ START_TEST(test_hand_str) {
 END_TEST
 
 START_TEST(test_new_deck) {
-    deck_t* deck = new_deck();
+    deck_t *deck = new_deck();
     ck_assert_int_eq(deck->ncards, 52);
     ck_assert_int_eq(deck->cards[0].rank, RANK_ACE);
     ck_assert_int_eq(deck->cards[0].suit, SUIT_CLUB);
@@ -201,7 +201,7 @@ START_TEST(test_new_deck) {
 /* test case: score */
 
 START_TEST(test_count_15s) {
-    hand_t* hand = new_hand(5);
+    hand_t *hand = new_hand(5);
 
     // One card cannot possibly add up to 15.
     hand->ncards = 1;
@@ -235,7 +235,7 @@ START_TEST(test_count_15s) {
 END_TEST
 
 START_TEST(test_count_pairs) {
-    hand_t* hand = new_hand(5);
+    hand_t *hand = new_hand(5);
 
     // One card: zero, no matter the card.
     hand->ncards = 1;
@@ -265,7 +265,7 @@ START_TEST(test_count_pairs) {
 END_TEST
 
 START_TEST(test_count_runs) {
-    hand_t* hand = new_hand(6);
+    hand_t *hand = new_hand(6);
 
     parse_hand(hand, "4♥ 5♦ 5♠ 0♥ J♥");      // nice hand, but no runs
     ck_assert_int_eq(count_runs(hand), 0);
@@ -290,7 +290,7 @@ START_TEST(test_count_runs) {
 END_TEST
 
 START_TEST(test_count_flush) {
-    hand_t* hand = new_hand(5);
+    hand_t *hand = new_hand(5);
 
     /* hand with no starter either is a flush ... */
     hand->ncards = 4;
@@ -328,7 +328,7 @@ START_TEST(test_count_flush) {
 }
 
 START_TEST(test_count_right_jack) {
-    hand_t* hand = new_hand(5);
+    hand_t *hand = new_hand(5);
 
     parse_hand(hand, "4♥ 7♣ 9♣ J♦ J♥");
 
@@ -353,7 +353,7 @@ START_TEST(test_count_right_jack) {
 }
 
 START_TEST(test_score_hand) {
-    hand_t* hand = new_hand(5);
+    hand_t *hand = new_hand(5);
 
     hand->ncards = 4;
     parse_hand(hand, "5♦ 5♠ 0♥ J♥");         // four 15s and a pair
@@ -568,11 +568,11 @@ START_TEST(test_add_starter) {
 }
 END_TEST
 
-Suite* cribsum_suite(void) {
-    Suite* suite = suite_create("cribsim");
-    TCase* tc_cards = tcase_create("cards");
-    TCase* tc_score = tcase_create("score");
-    TCase* tc_play = tcase_create("play");
+Suite *cribsum_suite(void) {
+    Suite *suite = suite_create("cribsim");
+    TCase *tc_cards = tcase_create("cards");
+    TCase *tc_score = tcase_create("score");
+    TCase *tc_play = tcase_create("play");
 
     tcase_add_test(tc_cards, test_card_string);
     tcase_add_test(tc_cards, test_card_cmp);
@@ -599,8 +599,8 @@ Suite* cribsum_suite(void) {
 }
 
 int main(void) {
-    Suite* suite = cribsum_suite();
-    SRunner* runner = srunner_create(suite);
+    Suite *suite = cribsum_suite();
+    SRunner *runner = srunner_create(suite);
 
     srunner_run_all(runner, CK_NORMAL);
     int num_failed = srunner_ntests_failed(runner);

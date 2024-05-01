@@ -9,6 +9,8 @@
 #include "play.h"
 
 int main(int argc, char *argv[]) {
+    log_set_level(LOG_DEBUG);
+
     time_t now = time(NULL);
     pid_t pid = getpid();
     uint seed = (int) now ^ (int) pid ^ ((int) pid << 16);

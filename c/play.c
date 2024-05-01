@@ -84,14 +84,14 @@ void eval_candidate_simple(int ncards, int indexes[], void *_data) {
     score_t score = score_hand(candidate);
     if (score.total > data->top_score) {
         // Ignore ties -- just use the first candidate to get to the top.
-        log_debug("new winner: top_score = %d, score = %d",
+        log_trace("new winner: top_score = %d, score = %d",
                   data->top_score,
                   score.total);
         data->top_score = score.total;
         copy_hand(winner, candidate);
     }
     else {
-        log_debug("no change: top_score = %d, score = %d",
+        log_trace("no change: top_score = %d, score = %d",
                   data->top_score,
                   score.total);
     }

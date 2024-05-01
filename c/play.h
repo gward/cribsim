@@ -2,6 +2,7 @@
 #define _PLAY_H
 
 #include "cards.h"
+#include "score.h"
 
 typedef struct {
     // Total points for each player:
@@ -41,6 +42,7 @@ typedef struct {
     hand_t *avail[2];
 } peg_state_t;
 
+peg_state_t *new_peg_state(int ncards);
 void peg_state_free(peg_state_t *peg);
 
 // peg_func_t implements a pegging strategy: each call plays a single
@@ -59,6 +61,11 @@ bool evaluate_hands(game_state_t *game_state,
                     hand_t *hands[],
                     hand_t *crib,
                     card_t starter);
-peg_state_t *peg_hands(int nplayers, hand_t *hands[], peg_func_t select[]);
+bool peg_hands(int nplayers,
+               peg_state_t *peg,
+               hand_t *hands[],
+               peg_func_t select[],
+               game_callback_func_t callback,
+               void *cb_data);
 
 #endif

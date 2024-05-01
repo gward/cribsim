@@ -270,11 +270,15 @@ uint peg_count_runs(peg_state_t *peg, int player) {
     return 0;
 }
 
-peg_state_t *peg_hands(int nplayers, hand_t *hands[], peg_func_t select[]) {
+bool peg_hands(int nplayers,
+               peg_state_t *peg,
+               hand_t *hands[],
+               peg_func_t select[],
+               game_callback_func_t callback,
+               void *cb_data) {
     assert(nplayers == 2);
     assert(hands[0]->ncards == hands[1]->ncards);
     uint ncards = hands[0]->ncards;
-    peg_state_t *peg = new_peg_state(ncards);
     int bufsize = ncards * 5;
     char buf1[bufsize], buf2[bufsize];
 
@@ -353,6 +357,9 @@ peg_state_t *peg_hands(int nplayers, hand_t *hands[], peg_func_t select[]) {
                           player,
                           other);
                 peg->points[other]++;
+                if (callback(cb_data, other, 1)) {
+                    return true;
+                }
             }
             else {
                 log_trace("  player %d blocked: no points to player %d (already blocked)",
@@ -381,6 +388,9 @@ peg_state_t *peg_hands(int nplayers, hand_t *hands[], peg_func_t select[]) {
                       peg->cur_count,
                       player);
             peg->points[player] += 2;
+            if (callback(cb_data, player, 2)) {
+                return true;
+            }
         }
         else if (peg->cur_count == 31) {
             if (blocked[other]) {
@@ -392,6 +402,9 @@ peg_state_t *peg_hands(int nplayers, hand_t *hands[], peg_func_t select[]) {
                           player,
                           other);
                 peg->points[player] += 1;
+                if (callback(cb_data, player, 1)) {
+                    return true;
+                }
             }
             else if (other_left == 0 && peg->avail[player]->ncards == 0) {
                 log_trace("  player %d played card %s, cur_count=%d: 1 point to player %d for last card",
@@ -400,6 +413,9 @@ peg_state_t *peg_hands(int nplayers, hand_t *hands[], peg_func_t select[]) {
                           peg->cur_count,
                           player);
                 peg->points[player] += 1;
+                if (callback(cb_data, player, 1)) {
+                    return true;
+                }
             }
             else {
                 log_trace("  player %d played card %s, cur_count=%d: 2 points to player %d",
@@ -408,6 +424,9 @@ peg_state_t *peg_hands(int nplayers, hand_t *hands[], peg_func_t select[]) {
                           peg->cur_count,
                           player);
                 peg->points[player] += 2;
+                if (callback(cb_data, player, 2)) {
+                    return true;
+                }
             }
 
             if (peg->avail[player]->ncards > 0) {
@@ -430,15 +449,24 @@ peg_state_t *peg_hands(int nplayers, hand_t *hands[], peg_func_t select[]) {
         // Check for M-of-a-kind.
         uint pair_points = peg_count_pairs(peg, player);
         peg->points[player] += pair_points;
+        if (callback(cb_data, player, pair_points)) {
+            return true;
+        }
 
         // Check for runs of M.
         uint run_points = peg_count_runs(peg, player);
         peg->points[player] += run_points;
+        if (callback(cb_data, player, run_points)) {
+            return true;
+        }
 
         // Check for last card.
         if (other_left == 0 && peg->avail[player]->ncards == 0) {
             log_trace("  player %d played last card: 1 point, done pegging", player);
             peg->points[player]++;
+            if (callback(cb_data, player, 1)) {
+                return true;
+            }
             break;
         }
     }
@@ -456,7 +484,10 @@ peg_state_t *peg_hands(int nplayers, hand_t *hands[], peg_func_t select[]) {
     assert(peg->avail[0]->ncards == 0);
     assert(peg->avail[1]->ncards == 0);
 
-    return peg;
+    log_debug("pegging done: %d points to player 0, %d points to player 1",
+              peg->points[0],
+              peg->points[1]);
+    return false;
 }
 
 
@@ -497,24 +528,42 @@ bool evaluate_hands(game_state_t *game_state,
         return true;
     }
 
+    assert(hands[0]->ncards == hands[1]->ncards);
+    assert(hands[0]->ncards == crib->ncards);
+    peg_state_t *peg = new_peg_state(hands[0]->ncards);
     peg_func_t select_func[2] = {peg_select_low, peg_select_low};
-    peg_state_t *peg = peg_hands(nplayers, hands, select_func);
-    log_debug("peg result: %d points to hands[0], %d points to hands[1]",
-              peg->points[0],
-              peg->points[1]);
+    bool done = peg_hands(nplayers, peg, hands, select_func, update_scores, game_state);
     peg_state_free(peg);
+    if (done) {
+        return true;
+    }
 
     // Add starter to each hand and the crib, and score all three.
     add_starter(hands[0], starter);
     add_starter(hands[1], starter);
     add_starter(crib, starter);
 
-    score_t score_0 = score_hand(hands[0]);
-    score_log("hands[0] with starter", score_0);
-    score_t score_1 = score_hand(hands[1]);
-    score_log("hands[1] with starter", score_1);
-    score_t score_crib = score_hand(crib);
-    score_log("crib with starter ", score_crib);
+    score_t score;
+
+    score = score_hand(hands[0]);
+    score_log("hands[0] with starter", score);
+    //game_state->scores[0] += score.total;
+    if (update_scores(game_state, 0, score.total)) {
+        return true;
+    }
+
+    score = score_hand(hands[1]);
+    score_log("hands[1] with starter", score);
+    //game_state->scores[1] += score.total;
+    if (update_scores(game_state, 1, score.total)) {
+        return true;
+    }
+
+    score = score_hand(crib);
+    score_log("crib with starter ", score);
+    if (update_scores(game_state, 1, score.total)) {
+        return true;
+    }
 
     return false;
 }

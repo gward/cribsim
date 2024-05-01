@@ -445,8 +445,12 @@ START_TEST(test_score_hand) {
     ck_assert_int_eq(score_hand(hand).total, 12);
 
     parse_hand(hand, "6♠ 7♠ 8♠ 9♠ J♠");     // two 15s, run of 4, flush of 5, right jack
-    hand->starter = 4;
+    hand->starter = 2;
     ck_assert_int_eq(score_hand(hand).total, 14);
+
+    // But if the starter card was a jack, that's not counted here.
+    hand->starter = 4;
+    ck_assert_int_eq(score_hand(hand).total, 13);
 
     free(hand);
 }
@@ -577,9 +581,15 @@ static peg_test_t peg_tests[] = {
     }
 };
 
+bool count_pegging(void *data, int player, uint points) {
+    game_state_t *game_state = data;
+    game_state->scores[player] += points;
+    return false;
+}
+
 START_TEST(test_peg_hands) {
     hand_t *hands[2] = {new_hand(4), new_hand(4)};
-    peg_state_t *peg;
+    peg_state_t *peg = new_peg_state(4);
     peg_func_t select_func[2] = {peg_select_low, peg_select_low};
 
     // This test is purely about counting points during pegging, not about
@@ -597,9 +607,10 @@ START_TEST(test_peg_hands) {
            tc.expect_points[0],
            tc.expect_points[1]);
 
+    game_state_t game_state = game_state_init();
     parse_hand(hands[0], tc.hand_0);
     parse_hand(hands[1], tc.hand_1);
-    peg = peg_hands(2, hands, select_func);
+    peg_hands(2, peg, hands, select_func, count_pegging, &game_state);
 
     printf("peg_tests[%d]: actual_counts={%d, %d, %d}, actual_points={%d, %d}\n",
            i,
@@ -645,36 +656,85 @@ START_TEST(test_add_starter) {
 }
 END_TEST
 
-START_TEST(test_evaluate_hands) {
-    hand_t *hands[2] = {new_hand(5), new_hand(5)};
-    hand_t *crib = new_hand(5);
+typedef struct {
+    char *hand_0;
+    char *hand_1;
+    char *crib;
+    card_t starter;
+    uint initial_scores[2];
+    uint expect_scores[2];
+    int expect_winner;
+    bool expect_done;
+} evaluate_hands_test_t;
 
-    // Two very simple hands:
+static evaluate_hands_test_t evaluate_hands_tests[] = {
+    // Two simple hands:
     // - player 1 (dealer) gets 1 point pegging for last card
     // - player 0 gets 1 pair = 2 points
     // - player 1 gets 3 pairs = 6 points
     // - crib is totally useless
-    parse_hand(hands[0], "2♥ 2♦ 4♥ 6♥");
-    parse_hand(hands[1], "A♠ A♣ A♥ 8♠");
-    parse_hand(crib, "2♠ 4♣ 6♣ 8♣");
+    {
+        hand_0: "2♥ 2♦ 4♥ 6♥",
+        hand_1: "A♠ A♣ A♥ 8♠",
+        crib: "2♠ 4♣ 6♣ 8♣",
+        starter: {rank: RANK_10, suit: SUIT_CLUB},
+        initial_scores: {0, 0},
+        expect_scores: {2, 7},
+        expect_winner: -1,
+        expect_done: false,
+    },
 
-    // Make the starter a jack, so 2 extra points to dealer (player 1).
-    card_t starter = {rank: RANK_JACK, suit: SUIT_CLUB};
-    bool done;
-    game_state_t game_state = game_state_init();
+    // Same, but this time the starter card is a jack: dealer gets 2 additional points.
+    {
+        hand_0: "2♥ 2♦ 4♥ 6♥",
+        hand_1: "A♠ A♣ A♥ 8♠",
+        crib: "2♠ 4♣ 6♣ 8♣",
+        starter: {rank: RANK_JACK, suit: SUIT_CLUB},
+        initial_scores: {0, 0},
+        expect_scores: {2, 9},
+        expect_winner: -1,
+        expect_done: false,
+    },
 
     // Game is nearly over: player 0 has 120, player 1 has 119. Turning up a
-    // jack bumps player 1 over the edge and we have a winner.
-    game_state.scores[0] = 120;
-    game_state.scores[1] = 119;
-    done = evaluate_hands(&game_state, 2, hands, crib, starter);
-    ck_assert_int_eq(game_state.scores[0], 120);
-    ck_assert_int_eq(game_state.scores[1], 121);
-    ck_assert_int_eq(game_state.winner, 1);
-    ck_assert(done);
+    // jack bumps player 1 over the edge and we have a winner. Player 0 doesn't
+    // get a chance to count anything: no pegging, no scoring of hands.
+    {
+        hand_0: "2♥ 2♦ 4♥ 6♥",
+        hand_1: "A♠ A♣ A♥ 8♠",
+        crib: "2♠ 4♣ 6♣ 8♣",
+        starter: {rank: RANK_JACK, suit: SUIT_CLUB},
+        initial_scores: {120, 119},
+        expect_scores: {120, 121},
+        expect_winner: 1,
+        expect_done: true,
+    },
+};
+
+START_TEST(test_evaluate_hands) {
+    hand_t *hands[2] = {new_hand(5), new_hand(5)};
+    hand_t *crib = new_hand(5);
+
+    evaluate_hands_test_t tc = evaluate_hands_tests[_i];
+
+    parse_hand(hands[0], tc.hand_0);
+    parse_hand(hands[1], tc.hand_1);
+    parse_hand(crib, tc.crib);
+
+    bool done;
+    game_state_t game_state = game_state_init();
+    game_state.scores[0] = tc.initial_scores[0];
+    game_state.scores[1] = tc.initial_scores[1];
+
+    done = evaluate_hands(&game_state, 2, hands, crib, tc.starter);
+    ck_assert_int_eq(game_state.scores[0], tc.expect_scores[0]);
+    ck_assert_int_eq(game_state.scores[1], tc.expect_scores[1]);
+    ck_assert_int_eq(game_state.winner, tc.expect_winner);
+    ck_assert(done == tc.expect_done);
 
     free(hands[0]);
     free(hands[1]);
+    free(crib);
 }
 END_TEST
 
@@ -684,6 +744,7 @@ Suite *cribsum_suite(void) {
     TCase *tc_cards = tcase_create("cards");
     TCase *tc_score = tcase_create("score");
     TCase *tc_play = tcase_create("play");
+    int ntests;
 
     tcase_add_test(tc_stringbuilder, test_stringbuilder_basics);
     tcase_add_test(tc_stringbuilder, test_stringbuilder_printf);
@@ -705,11 +766,12 @@ Suite *cribsum_suite(void) {
     tcase_add_test(tc_score, test_score_hand);
     suite_add_tcase(suite, tc_score);
 
-    int num_peg_tests = sizeof(peg_tests) / sizeof(peg_test_t);
-    tcase_add_loop_test(tc_play, test_peg_hands, 0, num_peg_tests);
+    ntests = sizeof(peg_tests) / sizeof(peg_test_t);
+    tcase_add_loop_test(tc_play, test_peg_hands, 0, ntests);
 
     tcase_add_test(tc_play, test_add_starter);
-    tcase_add_test(tc_play, test_evaluate_hands);
+    ntests = sizeof(evaluate_hands_tests) / sizeof(evaluate_hands_test_t);
+    tcase_add_loop_test(tc_play, test_evaluate_hands, 0, ntests);
     suite_add_tcase(suite, tc_play);
 
     return suite;

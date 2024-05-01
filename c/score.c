@@ -181,7 +181,13 @@ score_t score_hand(hand_t *hand) {
     score.pairs = 2 * count_pairs(hand);
     score.runs = count_runs(hand);
     score.flush = count_flush(hand);
-    score.right_jack = count_right_jack(hand);
+    if (hand->starter >= 0 && hand->cards[hand->starter].rank == RANK_JACK) {
+        // Starter card was a jack: that's handled elsewhere.
+        score.right_jack = 0;
+    }
+    else {
+        score.right_jack = count_right_jack(hand);
+    }
     score.total = score.fifteens + score.pairs + score.runs + score.flush + score.right_jack;
 
     return score;

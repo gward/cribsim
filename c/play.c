@@ -9,6 +9,16 @@
 #include "score.h"
 #include "twiddle.h"
 
+game_config_t game_config_init() {
+    game_config_t game_config = {
+        strategy: {
+            {NULL, NULL},
+            {NULL, NULL},
+        },
+    };
+    return game_config;
+}
+
 game_state_t game_state_init() {
     game_state_t game_state = {scores: {0, 0}, winner: -1};
     return game_state;
@@ -518,7 +528,8 @@ bool update_scores(void *data, int player, uint points) {
     return false;
 }
 
-bool evaluate_hands(game_state_t *game_state,
+bool evaluate_hands(game_config_t game_config,
+                    game_state_t *game_state,
                     int nplayers,
                     hand_t *hands[],
                     hand_t *crib,
@@ -531,8 +542,11 @@ bool evaluate_hands(game_state_t *game_state,
     assert(hands[0]->ncards == hands[1]->ncards);
     assert(hands[0]->ncards == crib->ncards);
     peg_state_t *peg = new_peg_state(hands[0]->ncards);
-    peg_func_t select_func[2] = {peg_select_low, peg_select_low};
-    bool done = peg_hands(nplayers, peg, hands, select_func, update_scores, game_state);
+    peg_func_t peg_funcs[2] = {
+        game_config.strategy[0].peg_func,
+        game_config.strategy[1].peg_func,
+    };
+    bool done = peg_hands(nplayers, peg, hands, peg_funcs, update_scores, game_state);
     peg_state_free(peg);
     if (done) {
         return true;
@@ -568,7 +582,9 @@ bool evaluate_hands(game_state_t *game_state,
     return false;
 }
 
-void play_hand(game_state_t *game_state, deck_t *deck) {
+void play_hand(game_config_t game_config,
+               game_state_t *game_state,
+               deck_t *deck) {
     int nplayers = 2;
     int ncards = 6;
 
@@ -599,9 +615,9 @@ void play_hand(game_state_t *game_state, deck_t *deck) {
     assert(deck_offset == ncards * nplayers);
     deck->offset = deck_offset;
 
-    // Discard cards using two different hardcoded strategies.
-    discard_simple(hands[0], crib);
-    discard_random(hands[1], crib);
+    // Discard cards using configured strategies.
+    game_config.strategy[0].discard_func(hands[0], crib);
+    game_config.strategy[1].discard_func(hands[1], crib);
     log_cards(LOG_DEBUG,
               "hands[0] after discard",
               hands[0]->ncards,
@@ -623,7 +639,7 @@ void play_hand(game_state_t *game_state, deck_t *deck) {
     log_debug("starter: deck[%d] = %s", starter_idx, card_str(buf, starter));
 
     // Evaluate the results (including pegging).
-    evaluate_hands(game_state, nplayers, hands, crib, starter);
+    evaluate_hands(game_config, game_state, nplayers, hands, crib, starter);
 
     free(hands[0]);
     free(hands[1]);

@@ -721,12 +721,22 @@ START_TEST(test_evaluate_hands) {
     parse_hand(hands[1], tc.hand_1);
     parse_hand(crib, tc.crib);
 
-    bool done;
+    game_config_t game_config = {
+        strategy: {
+            {peg_select_low, NULL},
+            {peg_select_low, NULL},
+        },
+    };
     game_state_t game_state = game_state_init();
     game_state.scores[0] = tc.initial_scores[0];
     game_state.scores[1] = tc.initial_scores[1];
 
-    done = evaluate_hands(&game_state, 2, hands, crib, tc.starter);
+    bool done = evaluate_hands(game_config,
+                               &game_state,
+                               2,
+                               hands,
+                               crib,
+                               tc.starter);
     ck_assert_int_eq(game_state.scores[0], tc.expect_scores[0]);
     ck_assert_int_eq(game_state.scores[1], tc.expect_scores[1]);
     ck_assert_int_eq(game_state.winner, tc.expect_winner);

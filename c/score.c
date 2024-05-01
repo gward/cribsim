@@ -7,6 +7,18 @@
 #include "stringbuilder.h"
 #include "twiddle.h"
 
+bool score_starter_jack(card_t starter,
+                        game_callback_func_t callback,
+                        void *cb_data) {
+    int player = 1;      // dealer always gets these points (if any)
+    uint points = 0;
+    if (starter.rank == RANK_JACK) {
+        log_debug("starter card is jack: 2 points to player 1 (dealer)");
+        points = 2;
+    }
+    return callback(cb_data, player, points);
+}
+
 typedef struct {
     hand_t *hand;
     uint num_15s;

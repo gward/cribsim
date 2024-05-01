@@ -9,6 +9,11 @@
 #include "score.h"
 #include "twiddle.h"
 
+game_state_t game_state_init() {
+    game_state_t game_state = {scores: {0, 0}, winner: -1};
+    return game_state;
+}
+
 /* Drop one card from hand (modify hand in place). */
 void drop_one(hand_t *hand, int drop) {
     card_t keep_cards[6];
@@ -471,7 +476,50 @@ void add_starter(hand_t *hand, card_t starter) {
     assert(hand->starter >= 0);
 }
 
-void play_hand(deck_t *deck) {
+bool update_scores(void *data, int player, uint points) {
+    game_state_t *game_state = data;
+    game_state->scores[player] += points;
+    if (game_state->scores[player] >= 121) {
+        log_info("winner: player %d with %d points", player, game_state->scores[player]);
+        game_state->winner = player;
+        return true;
+    }
+    return false;
+}
+
+bool evaluate_hands(game_state_t *game_state,
+                    int nplayers,
+                    hand_t *hands[],
+                    hand_t *crib,
+                    card_t starter) {
+    assert(nplayers == 2);
+    if (score_starter_jack(starter, update_scores, game_state)) {
+        return true;
+    }
+
+    peg_func_t select_func[2] = {peg_select_low, peg_select_low};
+    peg_state_t *peg = peg_hands(nplayers, hands, select_func);
+    log_debug("peg result: %d points to hands[0], %d points to hands[1]",
+              peg->points[0],
+              peg->points[1]);
+    peg_state_free(peg);
+
+    // Add starter to each hand and the crib, and score all three.
+    add_starter(hands[0], starter);
+    add_starter(hands[1], starter);
+    add_starter(crib, starter);
+
+    score_t score_0 = score_hand(hands[0]);
+    score_log("hands[0] with starter", score_0);
+    score_t score_1 = score_hand(hands[1]);
+    score_log("hands[1] with starter", score_1);
+    score_t score_crib = score_hand(crib);
+    score_log("crib with starter ", score_crib);
+
+    return false;
+}
+
+void play_hand(game_state_t *game_state, deck_t *deck) {
     int nplayers = 2;
     int ncards = 6;
 
@@ -496,7 +544,7 @@ void play_hand(deck_t *deck) {
     assert(deck_offset == ncards * nplayers);
     deck->offset = deck_offset;
 
-    // Play two different strategies for discarding cards.
+    // Discard cards using two different hardcoded strategies.
     discard_simple(hands[0], crib);
     discard_random(hands[1], crib);
     log_cards("hands[0] after discard", hands[0]->ncards, hands[0]->cards);
@@ -510,24 +558,8 @@ void play_hand(deck_t *deck) {
     char buf[5];
     log_debug("starter: deck[%d] = %s", starter_idx, card_str(buf, starter));
 
-    peg_func_t select_func[2] = {peg_select_low, peg_select_low};
-    peg_state_t *peg = peg_hands(nplayers, hands, select_func);
-    log_debug("peg result: %d points to hands[0], %d points to hands[1]",
-              peg->points[0],
-              peg->points[1]);
-    peg_state_free(peg);
-
-    // Add starter to each hand and the crib, and score all three.
-    add_starter(hands[0], starter);
-    add_starter(hands[1], starter);
-    add_starter(crib, starter);
-
-    score_t score_0 = score_hand(hands[0]);
-    score_log("hands[0] with starter", score_0);
-    score_t score_1 = score_hand(hands[1]);
-    score_log("hands[1] with starter", score_1);
-    score_t score_crib = score_hand(crib);
-    score_log("crib with starter ", score_crib);
+    // Evaluate the results (including pegging).
+    evaluate_hands(game_state, nplayers, hands, crib, starter);
 
     free(hands[0]);
     free(hands[1]);

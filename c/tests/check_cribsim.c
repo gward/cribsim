@@ -645,6 +645,39 @@ START_TEST(test_add_starter) {
 }
 END_TEST
 
+START_TEST(test_evaluate_hands) {
+    hand_t *hands[2] = {new_hand(5), new_hand(5)};
+    hand_t *crib = new_hand(5);
+
+    // Two very simple hands:
+    // - player 1 (dealer) gets 1 point pegging for last card
+    // - player 0 gets 1 pair = 2 points
+    // - player 1 gets 3 pairs = 6 points
+    // - crib is totally useless
+    parse_hand(hands[0], "2♥ 2♦ 4♥ 6♥");
+    parse_hand(hands[1], "A♠ A♣ A♥ 8♠");
+    parse_hand(crib, "2♠ 4♣ 6♣ 8♣");
+
+    // Make the starter a jack, so 2 extra points to dealer (player 1).
+    card_t starter = {rank: RANK_JACK, suit: SUIT_CLUB};
+    bool done;
+    game_state_t game_state = game_state_init();
+
+    // Game is nearly over: player 0 has 120, player 1 has 119. Turning up a
+    // jack bumps player 1 over the edge and we have a winner.
+    game_state.scores[0] = 120;
+    game_state.scores[1] = 119;
+    done = evaluate_hands(&game_state, 2, hands, crib, starter);
+    ck_assert_int_eq(game_state.scores[0], 120);
+    ck_assert_int_eq(game_state.scores[1], 121);
+    ck_assert_int_eq(game_state.winner, 1);
+    ck_assert(done);
+
+    free(hands[0]);
+    free(hands[1]);
+}
+END_TEST
+
 Suite *cribsum_suite(void) {
     Suite *suite = suite_create("cribsim");
     TCase *tc_stringbuilder = tcase_create("stringbuilder");
@@ -676,6 +709,7 @@ Suite *cribsum_suite(void) {
     tcase_add_loop_test(tc_play, test_peg_hands, 0, num_peg_tests);
 
     tcase_add_test(tc_play, test_add_starter);
+    tcase_add_test(tc_play, test_evaluate_hands);
     suite_add_tcase(suite, tc_play);
 
     return suite;

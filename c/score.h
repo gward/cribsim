@@ -1,7 +1,15 @@
 #ifndef _SCORE_H
 #define _SCORE_H
 
+#include <stdbool.h>
+
 #include "cards.h"
+
+typedef bool (*game_callback_func_t)(void *data, int player, uint points);
+
+bool score_starter_jack(card_t starter,
+                        game_callback_func_t callback,
+                        void *cb_data);
 
 typedef struct {
     // Each field counts the number of points from that source.

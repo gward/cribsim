@@ -3,8 +3,22 @@
 
 #include "cards.h"
 
+typedef struct {
+    // Total points for each player:
+    //   - player 0 is nondealer (first deal, starts pegging, counts first)
+    //   - player 1 is dealer
+    //
+    // Note that the identity of player 0 and 1 will swap on each hand!
+    uint scores[2];
+
+    // -1 if no winner yet, otherwise 0 or 1 for the player who just hit 121
+    int winner;
+} game_state_t;
+
+game_state_t game_state_init();
+
 void add_starter(hand_t *hand, card_t starter);
-void play_hand(deck_t *deck);
+void play_hand(game_state_t *game_state, deck_t *deck);
 
 #define MAX_ROUNDS 3
 
@@ -40,6 +54,11 @@ typedef int (*peg_func_t)(peg_state_t * peg, int player, int other);
 int peg_select_low(peg_state_t *peg, int player, int other);
 int peg_select_high(peg_state_t *peg, int player, int other);
 
+bool evaluate_hands(game_state_t *game_state,
+                    int nplayers,
+                    hand_t *hands[],
+                    hand_t *crib,
+                    card_t starter);
 peg_state_t *peg_hands(int nplayers, hand_t *hands[], peg_func_t select[]);
 
 #endif

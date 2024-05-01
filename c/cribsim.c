@@ -15,10 +15,16 @@ int main(int argc, char *argv[]) {
     log_trace("now = %ld, pid = %d, seed = %ud", now, pid, seed);
     srand(seed);
 
+    game_state_t game_state = game_state_init();
+
     deck_t *deck = new_deck();
     shuffle_deck(deck);
 
-    play_hand(deck);
+    play_hand(&game_state, deck);
+    log_info("after one hand: scores={%d, %d}, winner=%d",
+             game_state.scores[0],
+             game_state.scores[1],
+             game_state.winner);
 
     free(deck);
 

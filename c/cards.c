@@ -71,7 +71,7 @@ int card_cmp(card_t *card_a, card_t *card_b) {
     return val_a - val_b;
 }
 
-void log_cards(char *prefix, int ncards, card_t cards[]) {
+void log_cards(int level, char *prefix, int ncards, card_t cards[]) {
     char debug_str[5];
     char friendly_str[5];
 
@@ -93,7 +93,7 @@ void log_cards(char *prefix, int ncards, card_t cards[]) {
 
     char *out = sb_as_string(&sb);
     out[strlen(out) - 1] = 0;      // kill final newline
-    log_debug(out);
+    log_log(level, __FILE__, __LINE__, out);
     sb_close(&sb);
 }
 

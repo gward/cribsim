@@ -79,7 +79,7 @@ void eval_candidate_simple(int ncards, int indexes[], void *_data) {
     for (int i = 0; i < ncards; i++) {
         hand_append(candidate, input->cards[indexes[i]]);
     }
-    log_cards("candidate hand", candidate->ncards, candidate->cards);
+    log_cards(LOG_TRACE, "candidate hand", candidate->ncards, candidate->cards);
 
     score_t score = score_hand(candidate);
     if (score.total > data->top_score) {
@@ -126,7 +126,7 @@ void discard_simple(hand_t *hand, hand_t *crib) {
         }
     }
 
-    log_cards("winning candidate", winner->ncards, winner->cards);
+    log_cards(LOG_TRACE, "winning candidate", winner->ncards, winner->cards);
     copy_hand(hand, winner);
 
     free(winner);
@@ -588,17 +588,32 @@ void play_hand(game_state_t *game_state, deck_t *deck) {
     sort_cards(hands[0]->ncards, hands[0]->cards);
     sort_cards(hands[1]->ncards, hands[1]->cards);
 
-    log_cards("hands[0] after deal and sort", hands[0]->ncards, hands[0]->cards);
-    log_cards("hands[1] after deal and sort", hands[1]->ncards, hands[1]->cards);
+    log_cards(LOG_DEBUG,
+              "hands[0] after deal and sort",
+              hands[0]->ncards,
+              hands[0]->cards);
+    log_cards(LOG_DEBUG,
+              "hands[1] after deal and sort",
+              hands[1]->ncards,
+              hands[1]->cards);
     assert(deck_offset == ncards * nplayers);
     deck->offset = deck_offset;
 
     // Discard cards using two different hardcoded strategies.
     discard_simple(hands[0], crib);
     discard_random(hands[1], crib);
-    log_cards("hands[0] after discard", hands[0]->ncards, hands[0]->cards);
-    log_cards("hands[1] after discard", hands[1]->ncards, hands[1]->cards);
-    log_cards("crib after discard", crib->ncards, crib->cards);
+    log_cards(LOG_DEBUG,
+              "hands[0] after discard",
+              hands[0]->ncards,
+              hands[0]->cards);
+    log_cards(LOG_DEBUG,
+              "hands[1] after discard",
+              hands[1]->ncards,
+              hands[1]->cards);
+    log_cards(LOG_DEBUG,
+              "crib after discard",
+              crib->ncards,
+              crib->cards);
 
     // Turn up the starter card.
     int starter_idx = rand() % (deck->ncards - deck->offset);

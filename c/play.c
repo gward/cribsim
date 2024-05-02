@@ -613,7 +613,6 @@ void play_hand(game_config_t game_config,
               hands[1]->ncards,
               hands[1]->cards);
     assert(deck_offset == ncards * nplayers);
-    deck->offset = deck_offset;
 
     // Discard cards using configured strategies.
     game_config.strategy[0].discard_func(hands[0], crib);
@@ -632,8 +631,8 @@ void play_hand(game_config_t game_config,
               crib->cards);
 
     // Turn up the starter card.
-    int starter_idx = rand() % (deck->ncards - deck->offset);
-    starter_idx += deck->offset;
+    int starter_idx = rand() % (deck->ncards - deck_offset);
+    starter_idx += deck_offset;
     card_t starter = deck->cards[starter_idx];
     char buf[5];
     log_debug("starter: deck[%d] = %s", starter_idx, card_str(buf, starter));

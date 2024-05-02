@@ -41,7 +41,6 @@ typedef struct {
 } hand_t;
 
 typedef struct {
-    uint offset;    // next card to deal; 0 means full deck
     uint ncards;
     card_t cards[];
 } deck_t;

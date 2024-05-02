@@ -113,7 +113,6 @@ deck_t *new_deck() {
 
     int ncards = 52;
     deck_t *deck = malloc(sizeof(deck_t) + (ncards * sizeof(card_t)));
-    deck->offset = 0;
     deck->ncards = ncards;
     int i = 0;
     for (int rank = RANK_ACE; rank <= RANK_KING; rank++) {

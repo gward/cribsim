@@ -672,7 +672,7 @@ playername_t play_game(deck_t *deck) {
     };
     game_state.strategy[PLAYER_B] = (strategy_t) {
         peg_func: peg_select_low,
-        discard_func: discard_random,
+        discard_func: discard_simple,
     };
 
     bool done = false;

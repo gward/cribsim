@@ -525,10 +525,10 @@ bool update_scores(void *data, int player, uint points) {
     playername_t player_name = game_state->player_name[player];
     game_state->score[player_name] += points;
     if (game_state->score[player_name] >= 121) {
-        log_info("winner: player %d/%c with %d points",
-                 player,
-                 playername_as_char(player_name),
-                 game_state->score[player_name]);
+        log_debug("winner: player %d/%c with %d points",
+                  player,
+                  playername_as_char(player_name),
+                  game_state->score[player_name]);
         game_state->winner = player_name;
         return true;
     }
@@ -569,19 +569,19 @@ bool evaluate_hands(gamestate_t *game_state,
     score_t score;
 
     score = score_hand(hands[0]);
-    score_log("hands[0] with starter", score);
+    score_log("hands[0] scoring", score);
     if (update_scores(game_state, 0, score.total)) {
         return true;
     }
 
     score = score_hand(hands[1]);
-    score_log("hands[1] with starter", score);
+    score_log("hands[1] scoring", score);
     if (update_scores(game_state, 1, score.total)) {
         return true;
     }
 
     score = score_hand(crib);
-    score_log("crib with starter ", score);
+    score_log("crib scoring ", score);
     if (update_scores(game_state, 1, score.total)) {
         return true;
     }

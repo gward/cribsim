@@ -10,7 +10,7 @@
 #include "play.h"
 
 int main(int argc, char *argv[]) {
-    log_set_level(LOG_DEBUG);
+    log_set_level(LOG_INFO);
 
     time_t now = time(NULL);
     pid_t pid = getpid();

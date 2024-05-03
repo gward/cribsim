@@ -87,7 +87,7 @@ uint count_runs(hand_t *hand) {
         else if (prev_rank < RANK_QUEEN && cur_rank > prev_rank + 1) {
             if (current_run >= 3) {
                 run_points += current_run * repeats;
-                log_debug("run ended at i=%d: current_run=%d, repeats=%d, run_points=%d",
+                log_trace("run ended at i=%d: current_run=%d, repeats=%d, run_points=%d",
                           i,
                           current_run,
                           repeats,
@@ -101,7 +101,7 @@ uint count_runs(hand_t *hand) {
     // Fall off the end also counts as the end of a run.
     if (current_run >= 3) {
         run_points += current_run * repeats;
-        log_debug("run ended at i=%d: current_run=%d, repeats=%d, run_points=%d",
+        log_trace("run ended at i=%d: current_run=%d, repeats=%d, run_points=%d",
                   i,
                   current_run,
                   repeats,
@@ -242,6 +242,6 @@ void score_log(char *prefix, score_t score) {
     if (score.total > 0) {
         sb_append_char(&sb, ')');
     }
-    log_info(sb_as_string(&sb));
+    log_debug(sb_as_string(&sb));
     sb_close(&sb);
 }

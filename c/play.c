@@ -7,21 +7,24 @@
 #include "log.h"
 #include "play.h"
 #include "score.h"
+#include "stringbuilder.h"
 #include "twiddle.h"
 
-game_config_t game_config_init() {
-    game_config_t game_config = {
+gamestate_t gamestate_init() {
+    return (gamestate_t) {
+        player_name: {PLAYER_A, PLAYER_B},
         strategy: {
-            {NULL, NULL},
-            {NULL, NULL},
+            (strategy_t) {peg_func: NULL, discard_func: NULL},
+            (strategy_t) {peg_func: NULL, discard_func: NULL},
         },
+        score: {0, 0},
+        winner: -1,
     };
-    return game_config;
 }
 
-game_state_t game_state_init() {
-    game_state_t game_state = {scores: {0, 0}, winner: -1};
-    return game_state;
+char playername_as_char(playername_t name) {
+    // Simple arithmetic because PLAYER_A = 0, PLAYER_B = 1.
+    return (char) name + 'a';
 }
 
 /* Drop one card from hand (modify hand in place). */
@@ -518,34 +521,40 @@ void add_starter(hand_t *hand, card_t starter) {
 }
 
 bool update_scores(void *data, int player, uint points) {
-    game_state_t *game_state = data;
-    game_state->scores[player] += points;
-    if (game_state->scores[player] >= 121) {
-        log_info("winner: player %d with %d points", player, game_state->scores[player]);
-        game_state->winner = player;
+    gamestate_t *game_state = data;
+    playername_t player_name = game_state->player_name[player];
+    game_state->score[player_name] += points;
+    if (game_state->score[player_name] >= 121) {
+        log_info("winner: player %d/%c with %d points",
+                 player,
+                 playername_as_char(player_name),
+                 game_state->score[player_name]);
+        game_state->winner = player_name;
         return true;
     }
     return false;
 }
 
-bool evaluate_hands(game_config_t game_config,
-                    game_state_t *game_state,
+bool evaluate_hands(gamestate_t *game_state,
                     int nplayers,
                     hand_t *hands[],
                     hand_t *crib,
                     card_t starter) {
     assert(nplayers == 2);
+    assert(hands[0]->ncards == hands[1]->ncards);
+    assert(hands[0]->ncards == crib->ncards);
+
     if (score_starter_jack(starter, update_scores, game_state)) {
         return true;
     }
 
-    assert(hands[0]->ncards == hands[1]->ncards);
-    assert(hands[0]->ncards == crib->ncards);
-    peg_state_t *peg = new_peg_state(hands[0]->ncards);
+    playername_t *pname = game_state->player_name;
     peg_func_t peg_funcs[2] = {
-        game_config.strategy[0].peg_func,
-        game_config.strategy[1].peg_func,
+        game_state->strategy[pname[0]].peg_func,
+        game_state->strategy[pname[1]].peg_func,
     };
+
+    peg_state_t *peg = new_peg_state(hands[0]->ncards);
     bool done = peg_hands(nplayers, peg, hands, peg_funcs, update_scores, game_state);
     peg_state_free(peg);
     if (done) {
@@ -561,14 +570,12 @@ bool evaluate_hands(game_config_t game_config,
 
     score = score_hand(hands[0]);
     score_log("hands[0] with starter", score);
-    //game_state->scores[0] += score.total;
     if (update_scores(game_state, 0, score.total)) {
         return true;
     }
 
     score = score_hand(hands[1]);
     score_log("hands[1] with starter", score);
-    //game_state->scores[1] += score.total;
     if (update_scores(game_state, 1, score.total)) {
         return true;
     }
@@ -582,8 +589,7 @@ bool evaluate_hands(game_config_t game_config,
     return false;
 }
 
-void play_hand(game_config_t game_config,
-               game_state_t *game_state,
+bool play_hand(gamestate_t *game_state,
                deck_t *deck) {
     int nplayers = 2;
     int ncards = 6;
@@ -594,6 +600,7 @@ void play_hand(game_config_t game_config,
     hand_t *crib = new_hand(5);
 
     // Deal the hands.
+    shuffle_deck(deck);
     int deck_offset = 0;
     for (int i = 0; i < ncards; i++) {
         hand_append(hands[0], deck->cards[deck_offset++]);
@@ -615,8 +622,9 @@ void play_hand(game_config_t game_config,
     assert(deck_offset == ncards * nplayers);
 
     // Discard cards using configured strategies.
-    game_config.strategy[0].discard_func(hands[0], crib);
-    game_config.strategy[1].discard_func(hands[1], crib);
+    playername_t *pname = game_state->player_name;
+    game_state->strategy[pname[0]].discard_func(hands[0], crib);
+    game_state->strategy[pname[1]].discard_func(hands[1], crib);
     log_cards(LOG_DEBUG,
               "hands[0] after discard",
               hands[0]->ncards,
@@ -638,9 +646,67 @@ void play_hand(game_config_t game_config,
     log_debug("starter: deck[%d] = %s", starter_idx, card_str(buf, starter));
 
     // Evaluate the results (including pegging).
-    evaluate_hands(game_config, game_state, nplayers, hands, crib, starter);
+    bool done = evaluate_hands(game_state,
+                               nplayers,
+                               hands,
+                               crib,
+                               starter);
 
     free(hands[0]);
     free(hands[1]);
     free(crib);
+
+    return done;
+}
+
+char play_game(deck_t *deck) {
+    gamestate_t game_state = gamestate_init();
+
+    // Players A and B have the same naive pegging strategy.
+    // But Player A has a better discard strategy.
+    strategy_t strategy_a = {
+        peg_func: peg_select_low,
+        discard_func: discard_simple,
+    };
+    strategy_t strategy_b = {
+        peg_func: peg_select_low,
+        discard_func: discard_random,
+    };
+
+    game_state.strategy[PLAYER_A] = strategy_a;
+    game_state.strategy[PLAYER_B] = strategy_b;
+
+    bool done = false;
+    int num_hands = 0;
+    //char *player_map;  // map player number (0 or 1) to name (a or b)
+    char winner_name = 0;
+    while (!done) {
+        // Swap players: PLAYER_A becomes PLAYER_B and vice-versa.
+        game_state.player_name[0] ^= 1;
+        game_state.player_name[1] ^= 1;
+
+        done = play_hand(&game_state, deck);
+        num_hands++;
+        stringbuilder_t winner_sb;
+        sb_init(&winner_sb, 20);
+        if (done) {
+            assert(game_state.winner == 0 || game_state.winner == 1);
+            winner_name = playername_as_char(game_state.winner);
+            assert(winner_name == 'a' || winner_name == 'b');
+            sb_printf(&winner_sb,
+                      "winner=%c",
+                      winner_name);
+        }
+        else {
+            sb_append(&winner_sb, "no winner yet");
+        }
+
+        log_info("after %d hand(s): scores={a: %d, b: %d}, %s",
+                 num_hands,
+                 game_state.score[PLAYER_A],
+                 game_state.score[PLAYER_B],
+                 sb_as_string(&winner_sb));
+        sb_close(&winner_sb);
+    }
+    return winner_name;
 }

@@ -20,34 +20,43 @@ typedef int (*peg_func_t)(peg_state_t * peg, int player, int other);
 // cards.
 typedef void (*discard_func_t)(hand_t *hand, hand_t *crib);
 
+typedef enum {
+    PLAYER_A,
+    PLAYER_B,
+} playername_t;
+
 typedef struct {
     peg_func_t peg_func;
     discard_func_t discard_func;
 } strategy_t;
 
 typedef struct {
+    // Map player id (0 = nondealer, 1 = dealer) to player name (PLAYER_A,
+    // PLAYER_B). This cycles with every hand: if PLAYER_A is 0 (nondealer) on
+    // hand i, they will be 1 (dealer) on hand i+1.
+    playername_t player_name[2];
+
+    // Player strategy by player name: that is, PLAYER_A and PLAYER_B have
+    // distinct strategies that do not change as the game progresses. This is
+    // just a 2-element array because PLAYER_A and PLAYER_B happen to be the
+    // integers 0 and 1.
     strategy_t strategy[2];
-} game_config_t;
 
-typedef struct {
-    // Total points for each player:
-    //   - player 0 is nondealer (first deal, starts pegging, counts first)
-    //   - player 1 is dealer
-    //
-    // Note that the identity of player 0 and 1 will swap on each hand!
-    uint scores[2];
+    // Current score by player name (i.e. this consistently records the score of
+    // PLAYER_A and PLAYER_B throughout the game, without cycling).
+    uint score[2];
 
-    // -1 if no winner yet, otherwise 0 or 1 for the player who just hit 121
-    int winner;
-} game_state_t;
+    // -1 if no winner yet, otherwise PLAYER_A or PLAYER_B for the player who
+    // just hit 121
+    playername_t winner;
+} gamestate_t;
 
-game_config_t game_config_init();
-game_state_t game_state_init();
+gamestate_t gamestate_init();
 
 void add_starter(hand_t *hand, card_t starter);
-void play_hand(game_config_t game_config,
-               game_state_t *game_state,
+bool play_hand(gamestate_t *game_state,
                deck_t *deck);
+char play_game(deck_t *deck);
 
 void discard_simple(hand_t *hand, hand_t *crib);
 void discard_random(hand_t *hand, hand_t *crib);
@@ -79,8 +88,7 @@ void peg_state_free(peg_state_t *peg);
 int peg_select_low(peg_state_t *peg, int player, int other);
 int peg_select_high(peg_state_t *peg, int player, int other);
 
-bool evaluate_hands(game_config_t game_config,
-                    game_state_t *game_state,
+bool evaluate_hands(gamestate_t *game_state,
                     int nplayers,
                     hand_t *hands[],
                     hand_t *crib,

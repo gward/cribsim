@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -582,8 +583,9 @@ static peg_test_t peg_tests[] = {
 };
 
 bool count_pegging(void *data, int player, uint points) {
-    game_state_t *game_state = data;
-    game_state->scores[player] += points;
+    gamestate_t *game_state = data;
+    playername_t *pname = game_state->player_name;
+    game_state->score[pname[player]] += points;
     return false;
 }
 
@@ -607,7 +609,7 @@ START_TEST(test_peg_hands) {
            tc.expect_points[0],
            tc.expect_points[1]);
 
-    game_state_t game_state = game_state_init();
+    gamestate_t game_state = gamestate_init();
     parse_hand(hands[0], tc.hand_0);
     parse_hand(hands[1], tc.hand_1);
     peg_hands(2, peg, hands, select_func, count_pegging, &game_state);
@@ -721,25 +723,22 @@ START_TEST(test_evaluate_hands) {
     parse_hand(hands[1], tc.hand_1);
     parse_hand(crib, tc.crib);
 
-    game_config_t game_config = {
-        strategy: {
-            {peg_select_low, NULL},
-            {peg_select_low, NULL},
-        },
-    };
-    game_state_t game_state = game_state_init();
-    game_state.scores[0] = tc.initial_scores[0];
-    game_state.scores[1] = tc.initial_scores[1];
+    gamestate_t game_state = gamestate_init();
+    game_state.strategy[PLAYER_A].peg_func = peg_select_low;
+    game_state.strategy[PLAYER_B].peg_func = peg_select_low;
+    game_state.score[PLAYER_A] = tc.initial_scores[PLAYER_A];
+    game_state.score[PLAYER_B] = tc.initial_scores[PLAYER_B];
+    assert(game_state.player_name[0] == PLAYER_A);
+    assert(game_state.player_name[1] == PLAYER_B);
 
-    bool done = evaluate_hands(game_config,
-                               &game_state,
+    bool done = evaluate_hands(&game_state,
                                2,
                                hands,
                                crib,
                                tc.starter);
-    ck_assert_int_eq(game_state.scores[0], tc.expect_scores[0]);
-    ck_assert_int_eq(game_state.scores[1], tc.expect_scores[1]);
-    ck_assert_int_eq(game_state.winner, tc.expect_winner);
+    ck_assert_int_eq(game_state.score[PLAYER_A], tc.expect_scores[PLAYER_A]);
+    ck_assert_int_eq(game_state.score[PLAYER_B], tc.expect_scores[PLAYER_B]);
+    ck_assert_int_eq((int) game_state.winner, tc.expect_winner);
     ck_assert(done == tc.expect_done);
 
     free(hands[0]);

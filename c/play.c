@@ -607,34 +607,36 @@ bool play_hand(gamestate_t *game_state,
         hand_append(hands[1], deck->cards[deck_offset++]);
     }
     assert(deck->ncards - deck_offset == 40);
-
-    sort_cards(hands[0]->ncards, hands[0]->cards);
-    sort_cards(hands[1]->ncards, hands[1]->cards);
-
-    log_cards(LOG_DEBUG,
-              "hands[0] after deal and sort",
-              hands[0]->ncards,
-              hands[0]->cards);
-    log_cards(LOG_DEBUG,
-              "hands[1] after deal and sort",
-              hands[1]->ncards,
-              hands[1]->cards);
     assert(deck_offset == ncards * nplayers);
 
-    // Discard cards using configured strategies.
     playername_t *pname = game_state->player_name;
+
+    // Discard cards using configured strategies. Have to sort first because
+    // that's part of the contract with discard strategy functions.
+    sort_cards(hands[0]->ncards, hands[0]->cards);
+    log_cards(LOG_DEBUG,
+              "hands[0] after dealing",
+              hands[0]->ncards,
+              hands[0]->cards);
     game_state->strategy[pname[0]].discard_func(hands[0], crib);
-    game_state->strategy[pname[1]].discard_func(hands[1], crib);
     log_cards(LOG_DEBUG,
               "hands[0] after discard",
               hands[0]->ncards,
               hands[0]->cards);
+
+    sort_cards(hands[1]->ncards, hands[1]->cards);
+    log_cards(LOG_DEBUG,
+              "hands[1] after dealing",
+              hands[1]->ncards,
+              hands[1]->cards);
+    game_state->strategy[pname[1]].discard_func(hands[1], crib);
     log_cards(LOG_DEBUG,
               "hands[1] after discard",
               hands[1]->ncards,
               hands[1]->cards);
+
     log_cards(LOG_DEBUG,
-              "crib after discard",
+              "crib after discard    ",
               crib->ncards,
               crib->cards);
 

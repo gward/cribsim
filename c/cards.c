@@ -71,30 +71,39 @@ int card_cmp(card_t *card_a, card_t *card_b) {
     return val_a - val_b;
 }
 
-void log_cards(int level, char *prefix, int ncards, card_t cards[]) {
-    char debug_str[5];
-    char friendly_str[5];
-
-    stringbuilder_t sb;
-    sb_init(&sb, 64);
-
-    if (prefix != NULL) {
-        sb_append(&sb, prefix);
-        sb_append(&sb, ":\n");
-    }
-
+char *cards_str(char buf[], size_t size, int ncards, card_t cards[]) {
+    size_t size_left = size;
+    char *cur = buf;
     for (int i = 0; i < ncards; i++) {
-        sb_printf(&sb,
-                  "%2d: %s = %s\n",
-                  i,
-                  card_debug(debug_str, cards[i]),
-                  card_str(friendly_str, cards[i]));
-    }
+        if (size_left < 5) {
+            break;
+        }
 
-    char *out = sb_as_string(&sb);
-    out[strlen(out) - 1] = 0;      // kill final newline
-    log_log(level, __FILE__, __LINE__, out);
-    sb_close(&sb);
+        card_str(cur, cards[i]);
+        cur += 4;
+        size_left -= 4;
+        if (i < ncards - 1) {
+            *(cur++) = ' ';
+            size_left--;
+        }
+    }
+    assert(size_left >= 1);
+    *(cur++) = 0;
+    size_left--;
+    return buf;
+}
+
+void log_cards(int level, char *prefix, int ncards, card_t cards[]) {
+    size_t bufsize = 5 * ncards;
+    char buf[bufsize];
+
+    cards_str(buf, bufsize, ncards, cards);
+    if (prefix == NULL) {
+        log_log(level, __FILE__, __LINE__, buf);
+    }
+    else {
+        log_log(level, __FILE__, __LINE__, "%s: %s", prefix, buf);
+    }
 }
 
 static int cmp_cards(const void *a, const void *b) {
@@ -146,25 +155,7 @@ hand_t *new_hand(int size) {
 }
 
 char *hand_str(char buf[], size_t size, hand_t *hand) {
-    size_t size_left = size;
-    char *cur = buf;
-    for (int i = 0; i < hand->ncards; i++) {
-        if (size_left < 5) {
-            break;
-        }
-
-        card_str(cur, hand->cards[i]);
-        cur += 4;
-        size_left -= 4;
-        if (i < hand->ncards - 1) {
-            *(cur++) = ' ';
-            size_left--;
-        }
-    }
-    assert(size_left >= 1);
-    *(cur++) = 0;
-    size_left--;
-    return buf;
+    return cards_str(buf, size, hand->ncards, hand->cards);
 }
 
 void hand_append(hand_t *dest, card_t card) {

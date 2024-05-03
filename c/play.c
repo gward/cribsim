@@ -661,26 +661,22 @@ bool play_hand(gamestate_t *game_state,
     return done;
 }
 
-char play_game(deck_t *deck) {
+playername_t play_game(deck_t *deck) {
     gamestate_t game_state = gamestate_init();
 
     // Players A and B have the same naive pegging strategy.
     // But Player A has a better discard strategy.
-    strategy_t strategy_a = {
+    game_state.strategy[PLAYER_A] = (strategy_t) {
         peg_func: peg_select_low,
         discard_func: discard_simple,
     };
-    strategy_t strategy_b = {
+    game_state.strategy[PLAYER_B] = (strategy_t) {
         peg_func: peg_select_low,
         discard_func: discard_random,
     };
 
-    game_state.strategy[PLAYER_A] = strategy_a;
-    game_state.strategy[PLAYER_B] = strategy_b;
-
     bool done = false;
     int num_hands = 0;
-    //char *player_map;  // map player number (0 or 1) to name (a or b)
     char winner_name = 0;
     while (!done) {
         // Swap players: PLAYER_A becomes PLAYER_B and vice-versa.
@@ -692,7 +688,8 @@ char play_game(deck_t *deck) {
         stringbuilder_t winner_sb;
         sb_init(&winner_sb, 20);
         if (done) {
-            assert(game_state.winner == 0 || game_state.winner == 1);
+            assert(game_state.winner == PLAYER_A ||
+                   game_state.winner == PLAYER_B);
             winner_name = playername_as_char(game_state.winner);
             assert(winner_name == 'a' || winner_name == 'b');
             sb_printf(&winner_sb,
@@ -710,5 +707,5 @@ char play_game(deck_t *deck) {
                  sb_as_string(&winner_sb));
         sb_close(&winner_sb);
     }
-    return winner_name;
+    return game_state.winner;
 }

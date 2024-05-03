@@ -56,7 +56,7 @@ gamestate_t gamestate_init();
 void add_starter(hand_t *hand, card_t starter);
 bool play_hand(gamestate_t *game_state,
                deck_t *deck);
-char play_game(deck_t *deck);
+playername_t play_game(deck_t *deck);
 
 void discard_simple(hand_t *hand, hand_t *crib);
 void discard_random(hand_t *hand, hand_t *crib);

@@ -1,6 +1,8 @@
 #ifndef _PLAY_H
 #define _PLAY_H
 
+#include <limits.h>
+
 #include "cards.h"
 #include "score.h"
 
@@ -21,8 +23,9 @@ typedef int (*peg_func_t)(peg_state_t * peg, int player, int other);
 typedef void (*discard_func_t)(hand_t *hand, hand_t *crib);
 
 typedef enum {
-    PLAYER_A,
-    PLAYER_B,
+    PLAYER_A = 0,
+    PLAYER_B = 1,
+    PLAYER_NOBODY = INT_MAX,
 } playername_t;
 
 typedef struct {
@@ -46,8 +49,8 @@ typedef struct {
     // PLAYER_A and PLAYER_B throughout the game, without cycling).
     uint score[2];
 
-    // -1 if no winner yet, otherwise PLAYER_A or PLAYER_B for the player who
-    // just hit 121
+    // PLAYER_NOBODY if no winner yet, otherwise PLAYER_A or PLAYER_B
+    // for the player who just hit 121
     playername_t winner;
 } gamestate_t;
 

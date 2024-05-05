@@ -18,11 +18,15 @@ gamestate_t gamestate_init() {
             (strategy_t) {peg_func: NULL, discard_func: NULL},
         },
         score: {0, 0},
-        winner: -1,
+        winner: PLAYER_NOBODY,
     };
 }
 
 char playername_as_char(playername_t name) {
+    if (name == PLAYER_NOBODY) {
+        return '?';
+    }
+
     // Simple arithmetic because PLAYER_A = 0, PLAYER_B = 1.
     return (char) name + 'a';
 }

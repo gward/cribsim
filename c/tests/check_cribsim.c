@@ -665,7 +665,7 @@ typedef struct {
     card_t starter;
     uint initial_scores[2];
     uint expect_scores[2];
-    int expect_winner;
+    playername_t expect_winner;
     bool expect_done;
 } evaluate_hands_test_t;
 
@@ -682,7 +682,7 @@ static evaluate_hands_test_t evaluate_hands_tests[] = {
         starter: {rank: RANK_10, suit: SUIT_CLUB},
         initial_scores: {0, 0},
         expect_scores: {2, 7},
-        expect_winner: -1,
+        expect_winner: PLAYER_NOBODY,
         expect_done: false,
     },
 
@@ -694,7 +694,7 @@ static evaluate_hands_test_t evaluate_hands_tests[] = {
         starter: {rank: RANK_JACK, suit: SUIT_CLUB},
         initial_scores: {0, 0},
         expect_scores: {2, 9},
-        expect_winner: -1,
+        expect_winner: PLAYER_NOBODY,
         expect_done: false,
     },
 
@@ -708,7 +708,7 @@ static evaluate_hands_test_t evaluate_hands_tests[] = {
         starter: {rank: RANK_JACK, suit: SUIT_CLUB},
         initial_scores: {120, 119},
         expect_scores: {120, 121},
-        expect_winner: 1,
+        expect_winner: PLAYER_B,
         expect_done: true,
     },
 };
@@ -738,7 +738,7 @@ START_TEST(test_evaluate_hands) {
                                tc.starter);
     ck_assert_int_eq(game_state.score[PLAYER_A], tc.expect_scores[PLAYER_A]);
     ck_assert_int_eq(game_state.score[PLAYER_B], tc.expect_scores[PLAYER_B]);
-    ck_assert_int_eq((int) game_state.winner, tc.expect_winner);
+    ck_assert_int_eq(game_state.winner, tc.expect_winner);
     ck_assert(done == tc.expect_done);
 
     free(hands[0]);

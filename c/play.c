@@ -12,7 +12,7 @@
 
 gamestate_t gamestate_init() {
     return (gamestate_t) {
-        player_name: {PLAYER_A, PLAYER_B},
+        player_name: {PLAYER_NOBODY, PLAYER_NOBODY},
         strategy: {
             (strategy_t) {peg_func: NULL, discard_func: NULL},
             (strategy_t) {peg_func: NULL, discard_func: NULL},
@@ -678,6 +678,13 @@ playername_t play_game(deck_t *deck) {
         peg_func: peg_select_low,
         discard_func: discard_simple,
     };
+
+    // Pick the first dealer. Note that this decision will be flipped
+    // as soon as we start the loop below, but whatever. It's still
+    // randomized.
+    playername_t dealer = (playername_t) (rand() % 2);
+    game_state.player_name[1] = dealer;
+    game_state.player_name[0] = dealer ^ 1;
 
     bool done = false;
     int num_hands = 0;

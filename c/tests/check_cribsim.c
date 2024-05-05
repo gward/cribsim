@@ -610,6 +610,8 @@ START_TEST(test_peg_hands) {
            tc.expect_points[1]);
 
     gamestate_t game_state = gamestate_init();
+    game_state.player_name[0] = PLAYER_B;
+    game_state.player_name[1] = PLAYER_A;
     parse_hand(hands[0], tc.hand_0);
     parse_hand(hands[1], tc.hand_1);
     peg_hands(2, peg, hands, select_func, count_pegging, &game_state);
@@ -728,8 +730,8 @@ START_TEST(test_evaluate_hands) {
     game_state.strategy[PLAYER_B].peg_func = peg_select_low;
     game_state.score[PLAYER_A] = tc.initial_scores[PLAYER_A];
     game_state.score[PLAYER_B] = tc.initial_scores[PLAYER_B];
-    assert(game_state.player_name[0] == PLAYER_A);
-    assert(game_state.player_name[1] == PLAYER_B);
+    game_state.player_name[0] = PLAYER_A;
+    game_state.player_name[1] = PLAYER_B;
 
     bool done = evaluate_hands(&game_state,
                                2,

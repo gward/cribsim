@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "cards.h"
 #include "log.h"
 #include "play.h"
 #include "score.h"
@@ -73,42 +74,28 @@ void eval_candidate_simple(int ncards, int indexes[], void *_data) {
     assert(candidate->size == ncards);
     assert(winner->size >= ncards);
 
-    size_t size = 50;
-    int offset = 0;
-    char buf[size];
-    strncpy(buf, "eval_candidate_simple: {", size);
-    offset = strlen(buf);
-    for (int i = 0; i < ncards; i++) {
-        int nbytes = snprintf(buf + offset, size - offset, "%d", indexes[i]);
-        assert(nbytes < size - offset);
-        offset += nbytes;
-        if (i < ncards - 1) {
-            assert(size - offset >= 1);
-            buf[offset] = ',';
-            offset++;
-        }
-    }
-    assert(size - offset >= 1);
-    strncpy(buf + offset, "}", size - offset);
-    log_trace(buf);
-
     hand_truncate(candidate);
     for (int i = 0; i < ncards; i++) {
         hand_append(candidate, input->cards[indexes[i]]);
     }
-    log_cards(LOG_TRACE, "candidate hand", candidate->ncards, candidate->cards);
+
+    size_t size = 5 * candidate->ncards + 1;
+    char buf[size];
+    cards_str(buf, size, candidate->ncards, candidate->cards);
 
     score_t score = score_hand(candidate);
     if (score.total > data->top_score) {
         // Ignore ties -- just use the first candidate to get to the top.
-        log_trace("new winner: top_score = %d, score = %d",
+        log_trace("candidate hand: %s: top_score = %d, score = %d: new winner",
+                  buf,
                   data->top_score,
                   score.total);
         data->top_score = score.total;
         copy_hand(winner, candidate);
     }
     else {
-        log_trace("no change: top_score = %d, score = %d",
+        log_trace("candidate hand: %s: top_score = %d, score = %d: no change",
+                  buf,
                   data->top_score,
                   score.total);
     }

@@ -2,10 +2,10 @@
 #include <stdio.h>
 
 #include "cards.h"
+#include "combos.h"
 #include "log.h"
 #include "score.h"
 #include "stringbuilder.h"
-#include "twiddle.h"
 
 bool score_starter_jack(card_t starter,
                         game_callback_func_t callback,

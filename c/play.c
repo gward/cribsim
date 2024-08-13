@@ -5,11 +5,11 @@
 #include <string.h>
 
 #include "cards.h"
+#include "combos.h"
 #include "log.h"
 #include "play.h"
 #include "score.h"
 #include "stringbuilder.h"
-#include "twiddle.h"
 
 gamestate_t gamestate_init() {
     return (gamestate_t) {

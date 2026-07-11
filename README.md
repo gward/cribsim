@@ -119,9 +119,6 @@ deliberately.
 - **Flush scoring doesn't distinguish hand from crib.** Standard cribbage
   requires all five cards to match for a crib flush, but the code applies the
   same rule (4 or 5 cards) to both.
-- **Shuffle is slightly non-uniform.** The shuffle picks a random index from
-  the full deck rather than from the unshuffled suffix, so the distribution
-  is not perfectly uniform (though the bias is small in practice).
 
 ## Code overview
 

@@ -138,7 +138,7 @@ deck_t *new_deck() {
 void shuffle_deck(deck_t *deck) {
     card_t tmp;
     for (int i = 0; i < deck->ncards; i++) {
-        int j = rand() % deck->ncards;
+        int j = i + rand() % (deck->ncards - i);
         tmp = deck->cards[i];
         deck->cards[i] = deck->cards[j];
         deck->cards[j] = tmp;

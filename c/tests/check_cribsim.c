@@ -276,6 +276,56 @@ START_TEST(test_new_deck) {
     free(deck);
 }
 
+START_TEST(test_shuffle_uniform) {
+    // Build a minimal 3-card deck: A♣, A♦, A♥.
+    deck_t *deck = malloc(sizeof(deck_t) + 3 * sizeof(card_t));
+    deck->ncards = 3;
+
+    // Count occurrences of each of the 6 possible orderings.
+    int counts[6] = {0};
+    int N = 100000;
+
+    for (int i = 0; i < N; i++) {
+        deck->cards[0] = (card_t){.suit = SUIT_CLUB,    .rank = RANK_ACE};
+        deck->cards[1] = (card_t){.suit = SUIT_DIAMOND, .rank = RANK_ACE};
+        deck->cards[2] = (card_t){.suit = SUIT_HEART,   .rank = RANK_ACE};
+
+        shuffle_deck(deck);
+
+        // Encode the resulting permutation as an integer 0-5 using the
+        // Lehmer code.  s0 identifies the first card (0=♣, 1=♦, 2=♥) and
+        // contributes 0, 2, or 4.  s1 is compressed to 0 or 1 by removing
+        // s0 from the remaining choices, contributing the final bit.
+        int s0 = deck->cards[0].suit - SUIT_CLUB;   // 0, 1, or 2
+        int s1 = deck->cards[1].suit - SUIT_CLUB;   // 0, 1, or 2
+        if (s1 > s0) s1--;                           // compress to 0 or 1
+        counts[s0 * 2 + s1]++;
+    }
+
+    // Chi-square goodness-of-fit test against a uniform distribution over
+    // 6 outcomes (5 degrees of freedom).
+    //
+    // A correct Fisher-Yates shuffle has E[chi-sq] = 5 (= df).
+    // The buggy version (j drawn from full range rather than [i, n-1])
+    // produces a distribution of 4/27, 4/27, 4/27, 5/27, 5/27, 5/27, giving
+    // an expected chi-sq of ~1235 with N=100000 -- easily detectable.
+    //
+    // Critical value for df=5 at alpha=1e-6 is ~36.2; a correct shuffle
+    // will never come close.
+    double expected = N / 6.0;
+    double chi_sq = 0.0;
+    for (int i = 0; i < 6; i++) {
+        double diff = counts[i] - expected;
+        chi_sq += diff * diff / expected;
+    }
+    ck_assert_msg(chi_sq < 36.2,
+                  "shuffle is not uniform: chi-square=%.2f >= 36.2 (df=5, alpha=1e-6)",
+                  chi_sq);
+
+    free(deck);
+}
+END_TEST
+
 /* test case: score */
 
 START_TEST(test_count_15s) {
@@ -767,6 +817,7 @@ Suite *cribsum_suite(void) {
     tcase_add_test(tc_cards, test_hand_delete);
     tcase_add_test(tc_cards, test_hand_str);
     tcase_add_test(tc_cards, test_new_deck);
+    tcase_add_test(tc_cards, test_shuffle_uniform);
     suite_add_tcase(suite, tc_cards);
 
     tcase_add_test(tc_score, test_count_15s);

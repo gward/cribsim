@@ -221,6 +221,48 @@ int peg_select_high(peg_state_t *peg, int player, int other) {
     return -1;
 }
 
+// Parse a strategy spec of the form "PEG,DISCARD" (e.g. "low,simple") into
+// a strategy_t. Returns NULL on success (filling *out), or a static error
+// string on failure. Never prints to stderr.
+char *parse_strategy(const char *spec, strategy_t *out) {
+    char buf[64];
+    strncpy(buf, spec, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+
+    char *comma = strchr(buf, ',');
+    if (comma == NULL) {
+        return "strategy spec must be PEG,DISCARD (e.g. \"low,simple\")";
+    }
+    *comma = '\0';
+    char *peg_name     = buf;
+    char *discard_name = comma + 1;
+
+    peg_func_t peg_func;
+    if (strcmp(peg_name, "low") == 0) {
+        peg_func = peg_select_low;
+    }
+    else if (strcmp(peg_name, "high") == 0) {
+        peg_func = peg_select_high;
+    }
+    else {
+        return "unknown peg strategy (choices: low, high)";
+    }
+
+    discard_func_t discard_func;
+    if (strcmp(discard_name, "simple") == 0) {
+        discard_func = discard_simple;
+    }
+    else if (strcmp(discard_name, "random") == 0) {
+        discard_func = discard_random;
+    }
+    else {
+        return "unknown discard strategy (choices: simple, random)";
+    }
+
+    *out = (strategy_t) {.peg_func = peg_func, .discard_func = discard_func};
+    return NULL;
+}
+
 uint peg_count_pairs(peg_state_t *peg, int player) {
     uint same_rank = 1;
     uint pair_points = 0;
@@ -665,19 +707,11 @@ bool play_hand(gamestate_t *game_state,
     return done;
 }
 
-playername_t play_game(deck_t *deck) {
+playername_t play_game(deck_t *deck, strategy_t strategy_a, strategy_t strategy_b) {
     gamestate_t game_state = gamestate_init();
 
-    // Players A and B have the same naive pegging strategy.
-    // But Player A has a better discard strategy.
-    game_state.strategy[PLAYER_A] = (strategy_t) {
-        peg_func: peg_select_low,
-        discard_func: discard_simple,
-    };
-    game_state.strategy[PLAYER_B] = (strategy_t) {
-        peg_func: peg_select_low,
-        discard_func: discard_simple,
-    };
+    game_state.strategy[PLAYER_A] = strategy_a;
+    game_state.strategy[PLAYER_B] = strategy_b;
 
     // Pick the first dealer. Note that this decision will be flipped
     // as soon as we start the loop below, but whatever. It's still

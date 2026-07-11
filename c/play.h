@@ -56,10 +56,11 @@ typedef struct {
 
 gamestate_t gamestate_init();
 
+char *parse_strategy(const char *spec, strategy_t *out);
 void add_starter(hand_t *hand, card_t starter);
 bool play_hand(gamestate_t *game_state,
                deck_t *deck);
-playername_t play_game(deck_t *deck);
+playername_t play_game(deck_t *deck, strategy_t strategy_a, strategy_t strategy_b);
 
 void discard_simple(hand_t *hand, hand_t *crib);
 void discard_random(hand_t *hand, hand_t *crib);

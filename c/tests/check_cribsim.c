@@ -799,6 +799,40 @@ START_TEST(test_evaluate_hands) {
 }
 END_TEST
 
+/* test case: parse_strategy */
+
+START_TEST(test_parse_strategy_valid) {
+    strategy_t s;
+
+    ck_assert_ptr_null(parse_strategy("low,simple", &s));
+    ck_assert_ptr_eq(s.peg_func,     peg_select_low);
+    ck_assert_ptr_eq(s.discard_func, discard_simple);
+
+    ck_assert_ptr_null(parse_strategy("low,random", &s));
+    ck_assert_ptr_eq(s.peg_func,     peg_select_low);
+    ck_assert_ptr_eq(s.discard_func, discard_random);
+
+    ck_assert_ptr_null(parse_strategy("high,simple", &s));
+    ck_assert_ptr_eq(s.peg_func,     peg_select_high);
+    ck_assert_ptr_eq(s.discard_func, discard_simple);
+
+    ck_assert_ptr_null(parse_strategy("high,random", &s));
+    ck_assert_ptr_eq(s.peg_func,     peg_select_high);
+    ck_assert_ptr_eq(s.discard_func, discard_random);
+}
+END_TEST
+
+START_TEST(test_parse_strategy_invalid) {
+    strategy_t s;
+
+    ck_assert_ptr_nonnull(parse_strategy("low",        &s));  // missing comma
+    ck_assert_ptr_nonnull(parse_strategy("bad,simple", &s));  // unknown peg
+    ck_assert_ptr_nonnull(parse_strategy("low,bad",    &s));  // unknown discard
+    ck_assert_ptr_nonnull(parse_strategy(",simple",    &s));  // empty peg token
+    ck_assert_ptr_nonnull(parse_strategy("low,",       &s));  // empty discard token
+}
+END_TEST
+
 Suite *cribsum_suite(void) {
     Suite *suite = suite_create("cribsim");
     TCase *tc_stringbuilder = tcase_create("stringbuilder");
@@ -834,6 +868,8 @@ Suite *cribsum_suite(void) {
     tcase_add_test(tc_play, test_add_starter);
     ntests = sizeof(evaluate_hands_tests) / sizeof(evaluate_hands_test_t);
     tcase_add_loop_test(tc_play, test_evaluate_hands, 0, ntests);
+    tcase_add_test(tc_play, test_parse_strategy_valid);
+    tcase_add_test(tc_play, test_parse_strategy_invalid);
     suite_add_tcase(suite, tc_play);
 
     return suite;

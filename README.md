@@ -11,10 +11,7 @@ to compare strategies and understand how well they perform.
 pegging and hand/crib scoring. After playing a batch of games it reports how
 many each player won.
 
-At the moment both players use the same strategy (`discard_simple` +
-`peg_select_low`), so the win totals reflect natural variance rather than a
-strategy comparison. The simulator is designed to make it easy to wire in
-different strategies and pit them against each other.
+Different strategies can be selected at runtime using command-line options.
 
 ## Building
 
@@ -49,8 +46,8 @@ make grind
 ./build/cribsim
 ```
 
-There are no command-line options. The program plays 100 games and writes
-one log line per hand to stderr, followed by a final summary:
+By default, the program plays 100 games and writes one log line per
+hand to stderr, followed by a final summary:
 
 ```
 INFO  play.c:714: after 1 hand(s): scores={a: 14, b: 7}, no winner yet
@@ -58,6 +55,13 @@ INFO  play.c:714: after 2 hand(s): scores={a: 21, b: 19}, no winner yet
 ...
 INFO  play.c:714: after 17 hand(s): scores={a: 121, b: 93}, winner=a
 INFO  cribsim.c:29: player a: 54 wins, player b: 46 wins
+```
+
+Use options `--strategy-a` and `--strategy-b` to specify different
+pegging and discard strategies for the two players:
+
+```
+./build/cribsim --strategy-a low,random --strategy-a high,simple
 ```
 
 Cards are formatted with Unicode suit symbols (♣ ♦ ♥ ♠) and rank characters
@@ -74,21 +78,21 @@ count).
 
 ### Discard strategies
 
-| Name              | Description                                                                                                                                   |
-|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
-| `discard_simple`  | Enumerates all 15 ways to choose 4 cards from the 6 dealt. Keeps the 4 with the highest static score (no starter card). Ties go to the first combination found. |
-| `discard_random`  | Discards two randomly chosen cards. Useful as a baseline.                                                                                     |
+| Name      | Description                                                                                                                                   |
+|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `simple`  | Enumerates all 15 ways to choose 4 cards from the 6 dealt. Keeps the 4 with the highest static score (no starter card). Ties go to the first combination found. |
+| `random`  | Discards two randomly chosen cards. Useful as a baseline.                                                                                     |
 
-`discard_simple` ignores: the starter card, expected value over possible
+`discard_simple` ignores the starter card, expected value over possible
 starters, whether the crib belongs to you or your opponent, and secondary
 tiebreaking criteria.
 
 ### Pegging strategies
 
-| Name              | Description                                                  |
-|-------------------|--------------------------------------------------------------|
-| `peg_select_low`  | Always plays the lowest card that keeps the count ≤ 31.     |
-| `peg_select_high` | Always plays the highest card that keeps the count ≤ 31.    |
+| Name   | Description                                                  |
+|--------|--------------------------------------------------------------|
+| `low`  | Always plays the lowest card that keeps the count ≤ 31.      |
+| `high` | Always plays the highest card that keeps the count ≤ 31.     |
 
 Both strategies are purely reactive — they have no knowledge of the
 opponent's hand and do no look-ahead. Neither tries to make 15s or 31s
@@ -96,9 +100,6 @@ deliberately.
 
 ## What you can change (without major surgery)
 
-- **Number of games** — change `ngames` in `cribsim.c:main()`.
-- **Player strategies** — in `play_game()` in `play.c`, assign any combination
-  of the four strategy functions above to `PLAYER_A` and `PLAYER_B`.
 - **Log verbosity** — change the `log_set_level()` call in `main()`. Use
   `LOG_DEBUG` to see dealt/discarded cards and scoring breakdowns per hand,
   or `LOG_TRACE` for every pegging move and combo evaluation. `LOG_WARN`
@@ -110,8 +111,6 @@ deliberately.
 
 ## Known limitations
 
-- **No command-line interface.** Number of games, strategies, and log level
-  are all hardcoded and require a recompile to change.
 - **No structured output.** Results go to stderr in human-readable log format
   only; there is no CSV, JSON, or other format suitable for further analysis.
 - **Strategies are naive.** Neither discard nor pegging strategy does any

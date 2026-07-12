@@ -359,6 +359,10 @@ END_TEST
 START_TEST(test_count_pairs) {
     hand_t *hand = new_hand(5);
 
+    // No cards: zero, and must not read out of bounds.
+    parse_hand(hand, "");
+    ck_assert_int_eq(count_pairs(hand), 0);
+
     // One card: zero, no matter the card.
     hand->ncards = 1;
     parse_hand(hand, "2♦");

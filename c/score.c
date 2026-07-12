@@ -51,6 +51,9 @@ uint count_pairs(hand_t *hand) {
     uint ncards = hand->ncards;
     card_t *cards = hand->cards;
     int num_pairs = 0;
+    if (ncards == 0) {
+        return 0;
+    }
     for (int i = 0; i < ncards - 1; i++) {
         for (int j = i + 1; j < ncards && cards[j].rank == cards[i].rank; j++) {
             num_pairs++;

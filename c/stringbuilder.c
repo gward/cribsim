@@ -52,6 +52,9 @@ void sb_free(stringbuilder_t *sb) {
 
 static bool sb_fit_buffer(stringbuilder_t *sb, size_t new_len) {
     size_t old_cap = sb->cap;
+    if (sb->cap == 0) {
+        sb->cap = 1;
+    }
     while (sb->cap <= new_len) {
         sb->cap *= LOAD_FACTOR;
     }

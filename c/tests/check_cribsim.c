@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <check.h>
 
@@ -148,6 +149,22 @@ START_TEST(test_stringbuilder_append_int) {
     assert_stringbuilder(&sb, "-234254 , ", 16);
     sb_append_int(&sb, 938682);
     assert_stringbuilder(&sb, "-234254 , 938682", 32);
+}
+END_TEST
+
+START_TEST(test_stringbuilder_zero_cap) {
+    // sb_fit_buffer()'s growth loop is `while (sb->cap <= new_len) sb->cap
+    // *= LOAD_FACTOR;`. If cap starts at 0, 0 * LOAD_FACTOR is still 0, so
+    // the loop never terminates. sb_init(sb, 0) leaves cap == 0 (calloc(0,
+    // ...) returns a non-NULL pointer on this platform, so sb_init does not
+    // fail), so any append against it should hang instead of growing.
+    stringbuilder_t sb;
+    sb_init(&sb, 0);
+    ck_assert_int_eq(sb.cap, 0);
+
+    sb_append(&sb, "hello");    // must not hang
+
+    sb_close(&sb);
 }
 END_TEST
 
@@ -837,6 +854,7 @@ Suite *cribsum_suite(void) {
     tcase_add_test(tc_stringbuilder, test_stringbuilder_basics);
     tcase_add_test(tc_stringbuilder, test_stringbuilder_printf);
     tcase_add_test(tc_stringbuilder, test_stringbuilder_append_int);
+    tcase_add_test(tc_stringbuilder, test_stringbuilder_zero_cap);
     suite_add_tcase(suite, tc_stringbuilder);
 
     tcase_add_test(tc_cards, test_card_string);

@@ -168,6 +168,33 @@ START_TEST(test_stringbuilder_zero_cap) {
 }
 END_TEST
 
+START_TEST(test_stringbuilder_memset) {
+    // sb_fit_buffer() uses memset() after realloc() to ensure that
+    // the unused part of its buffer is all zeroes. Make sure this
+    // works correctly. Force more than one doubling because this used
+    // to have a bug: it worked fine with one doubling, but did not
+    // memset() enough bytes after multiple doublings.
+    char *mem = malloc(1024);
+    memset(mem, 0xAA, 1024);
+    stringbuilder_t sb = {.mem = mem, .len = 0, .cap = 4};
+
+    // Force cap to grow 4 -> 8 -> 16 -> 32 in one sb_fit_buffer() call.
+    sb_printf(&sb, "%s", "AAAAAAAAAAAAAAAAAAAA");    // 20 chars
+    ck_assert_int_eq(sb.cap, 32);
+    ck_assert_int_eq(sb.len, 20);
+
+    // Everything past the written string + NUL, up to cap, must be zero.
+    for (size_t i = sb.len + 1; i < sb.cap; i++) {
+        ck_assert_msg(sb.mem[i] == 0,
+                      "sb.mem[%zu] = 0x%02hhx, expected 0 (uninitialized capacity leaked)",
+                      i,
+                      (unsigned char) sb.mem[i]);
+    }
+
+    sb_close(&sb);
+}
+END_TEST
+
 /* test case: cards */
 
 START_TEST(test_card_string) {
@@ -855,6 +882,7 @@ Suite *cribsum_suite(void) {
     tcase_add_test(tc_stringbuilder, test_stringbuilder_printf);
     tcase_add_test(tc_stringbuilder, test_stringbuilder_append_int);
     tcase_add_test(tc_stringbuilder, test_stringbuilder_zero_cap);
+    tcase_add_test(tc_stringbuilder, test_stringbuilder_memset);
     suite_add_tcase(suite, tc_stringbuilder);
 
     tcase_add_test(tc_cards, test_card_string);

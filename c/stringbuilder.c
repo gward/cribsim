@@ -63,7 +63,7 @@ static bool sb_fit_buffer(stringbuilder_t *sb, size_t new_len) {
         if (!new_mem) {
             return false;
         }
-        memset(new_mem + old_cap, 0, old_cap);
+        memset(new_mem + old_cap, 0, sb->cap - old_cap);
         sb->mem = new_mem;
     }
     return true;

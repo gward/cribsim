@@ -1,9 +1,9 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <sys/types.h>
 
 #include "cards.h"
 #include "log.h"
@@ -40,10 +40,10 @@ int main(int argc, char *argv[]) {
     };
 
     static struct option long_options[] = {
-        {"games",      required_argument, 0, 'n'},
+        {"games", required_argument, 0, 'n'},
         {"strategy-a", required_argument, 0, 'a'},
         {"strategy-b", required_argument, 0, 'b'},
-        {"help",       no_argument,       0, 'h'},
+        {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0},
     };
 
@@ -95,9 +95,7 @@ int main(int argc, char *argv[]) {
         playername_t winner = play_game(deck, strategy_a, strategy_b);
         games_won[winner]++;
     }
-    log_info("player a: %d wins, player b: %d wins",
-             games_won[PLAYER_A],
-             games_won[PLAYER_B]);
+    log_info("player a: %d wins, player b: %d wins", games_won[PLAYER_A], games_won[PLAYER_B]);
 
     free(deck);
     return 0;

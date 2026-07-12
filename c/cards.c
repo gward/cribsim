@@ -48,16 +48,16 @@ char *card_str(char result[], card_t card) {
         result[1] = 0;
         break;
     case SUIT_CLUB:
-        strcpy(result+1, "♣");
+        strcpy(result + 1, "♣");
         break;
     case SUIT_DIAMOND:
-        strcpy(result+1, "♦");
+        strcpy(result + 1, "♦");
         break;
     case SUIT_HEART:
-        strcpy(result+1, "♥");
+        strcpy(result + 1, "♥");
         break;
     case SUIT_SPADE:
-        strcpy(result+1, "♠");
+        strcpy(result + 1, "♠");
         break;
     }
     result[4] = 0;
@@ -107,7 +107,7 @@ void log_cards(int level, char *prefix, int ncards, card_t cards[]) {
 }
 
 static int cmp_cards(const void *a, const void *b) {
-    return card_cmp((card_t *) a,  (card_t *) b);
+    return card_cmp((card_t *) a, (card_t *) b);
 }
 
 /* Sort an array of cards in place (by rank then suit). */
@@ -173,7 +173,7 @@ void hand_delete(hand_t *dest, int del_idx) {
     assert(del_idx < dest->ncards);
     int i;
     for (i = del_idx; i < dest->ncards - 1; i++) {
-        dest->cards[i] = dest->cards[i+1];
+        dest->cards[i] = dest->cards[i + 1];
     }
     dest->cards[i] = (card_t) {0, 0};
     dest->ncards--;

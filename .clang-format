@@ -1,0 +1,69 @@
+# clang-format config matching the existing style of c/*.{c,h}.
+#
+# Apply with:      clang-format -i c/*.c c/*.h c/tests/*.c
+# Check with:       clang-format --dry-run --Werror c/*.c c/*.h c/tests/*.c
+# Editor integration: most editors/LSPs pick this up automatically.
+
+BasedOnStyle: LLVM
+
+IndentWidth: 4
+UseTab: Never
+ColumnLimit: 100
+
+# Braces attach to the same line as if/for/while/switch/function/struct,
+# except 'else', which starts a new line after the closing brace:
+#   if (x) {
+#       ...
+#   }
+#   else {
+#       ...
+#   }
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: false
+  AfterControlStatement: false
+  AfterStruct: false
+  AfterEnum: false
+  AfterUnion: false
+  BeforeElse: true
+  BeforeCatch: true
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+
+# card_t *card, not card_t* card or card_t * card.
+PointerAlignment: Right
+
+# suit_t suit:4;  -- no spaces around the bitfield colon.
+BitFieldColonSpacing: None
+
+# switch (x) { case FOO: ... } -- case labels are not indented from switch.
+IndentCaseLabels: false
+
+# Wrapped argument/parameter lists go one-per-line, aligned under the
+# opening paren, rather than packed:
+#   bool peg_hands(int nplayers,
+#                  peg_state_t *peg,
+#                  ...) {
+AlignAfterOpenBracket: Align
+BinPackArguments: false
+BinPackParameters: false
+
+# Don't move trailing '// comment' explanations -- keep whatever column
+# alignment they were written with instead of forcing them into one.
+AlignTrailingComments:
+  Kind: Leave
+
+# (card_t *) x, not (card_t *)x.
+SpaceAfterCStyleCast: true
+
+# Return type stays on the function's line even when params wrap.
+AlwaysBreakAfterReturnType: None
+
+# Never collapse a function body onto the same line as its signature,
+# even a one-liner like `void sort_cards(...) { qsort(...); }`.
+AllowShortFunctionsOnASingleLine: None
+
+# #include <...> and #include "..." are each already sorted alphabetically
+# within their own block; keep them that way without merging the blocks.
+SortIncludes: true
+IncludeBlocks: Preserve

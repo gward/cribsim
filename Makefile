@@ -6,6 +6,11 @@ SRC = $(wildcard c/*.c)
 OBJ = $(patsubst %.c,build/%.o,$(notdir $(SRC)))
 #$(info OBJ=$(OBJ))
 
+# Vendored third-party code (c/log.c, c/log.h, c/rxilog/) is excluded:
+# it has its own style and isn't ours to reformat.
+FMT_SRC = $(filter-out c/log.c,$(SRC)) $(wildcard c/tests/*.c)
+FMT_HDR = $(filter-out c/log.h,$(wildcard c/*.h))
+
 TESTOBJ = $(filter-out build/cribsim.o,$(OBJ))
 $(info TESTOBJ=$(TESTOBJ))
 
@@ -27,3 +32,6 @@ check: build/check_cribsim
 
 grind: build/cribsim
 	valgrind --leak-check=yes --leak-check=full --show-leak-kinds=all $<
+
+format:
+	clang-format -i $(FMT_SRC) $(FMT_HDR)

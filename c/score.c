@@ -7,9 +7,7 @@
 #include "stringbuilder.h"
 #include "twiddle.h"
 
-bool score_starter_jack(card_t starter,
-                        game_callback_func_t callback,
-                        void *cb_data) {
+bool score_starter_jack(card_t starter, game_callback_func_t callback, void *cb_data) {
     int player = 1;      // dealer always gets these points (if any)
     uint points = 0;
     if (starter.rank == RANK_JACK) {
@@ -37,7 +35,7 @@ void visit_count_15s(int ncards, int indexes[], void *_data) {
 }
 
 uint count_15s(hand_t *hand) {
-    count_data_t data = {hand: hand, num_15s: 0};
+    count_data_t data = {hand : hand, num_15s : 0};
     for (int subset_len = hand->ncards; subset_len >= 2; subset_len--) {
         iter_combos(hand->ncards, subset_len, visit_count_15s, &data);
     }
@@ -67,7 +65,7 @@ uint count_runs(hand_t *hand) {
     uint repeats = 1;
     int i;
     for (i = 1; i < hand->ncards; i++) {
-        rank_t prev_rank = hand->cards[i-1].rank;
+        rank_t prev_rank = hand->cards[i - 1].rank;
         rank_t cur_rank = hand->cards[i].rank;
 
         // 3 4: extend current_run to 2
@@ -204,40 +202,23 @@ void score_log(char *prefix, score_t score) {
     sb_append_int(&sb, score.total);
     char *sep = " (";
     if (score.fifteens > 0) {
-        sb_printf(&sb,
-                  "%s%d fifteen(s) for %d",
-                  sep,
-                  score.fifteens / 2,
-                  score.fifteens);
+        sb_printf(&sb, "%s%d fifteen(s) for %d", sep, score.fifteens / 2, score.fifteens);
         sep = ", ";
     }
     if (score.pairs > 0) {
-        sb_printf(&sb,
-                  "%s%d pair(s) for %d",
-                  sep,
-                  score.pairs / 2,
-                  score.pairs);
+        sb_printf(&sb, "%s%d pair(s) for %d", sep, score.pairs / 2, score.pairs);
         sep = ", ";
     }
     if (score.runs > 0) {
-        sb_printf(&sb,
-                  "%srun(s) for %d",
-                  sep,
-                  score.runs);
+        sb_printf(&sb, "%srun(s) for %d", sep, score.runs);
         sep = ", ";
     }
     if (score.flush > 0) {
-        sb_printf(&sb,
-                  "%sflush for %d",
-                  sep,
-                  score.flush);
+        sb_printf(&sb, "%sflush for %d", sep, score.flush);
         sep = ", ";
     }
     if (score.right_jack > 0) {
-        sb_printf(&sb,
-                  "%sright jack for %d",
-                  sep,
-                  score.right_jack);
+        sb_printf(&sb, "%sright jack for %d", sep, score.right_jack);
     }
     if (score.total > 0) {
         sb_append_char(&sb, ')');

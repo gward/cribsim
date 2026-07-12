@@ -14,7 +14,7 @@ typedef struct _peg_state peg_state_t;
 //
 // Caller is responsible for all adjustments to pegging state: moving
 // card from avail to played, updating count, whatever.
-typedef int (*peg_func_t)(peg_state_t * peg, int player, int other);
+typedef int (*peg_func_t)(peg_state_t *peg, int player, int other);
 
 // discard_func_t implements a discard strategy: one call selects two
 // cards in 'hand' and appends them to 'crib'. Caller is responsible
@@ -58,8 +58,7 @@ gamestate_t gamestate_init();
 
 char *parse_strategy(const char *spec, strategy_t *out);
 void add_starter(hand_t *hand, card_t starter);
-bool play_hand(gamestate_t *game_state,
-               deck_t *deck);
+bool play_hand(gamestate_t *game_state, deck_t *deck);
 playername_t play_game(deck_t *deck, strategy_t strategy_a, strategy_t strategy_b);
 
 void discard_simple(hand_t *hand, hand_t *crib);
@@ -92,11 +91,8 @@ void peg_state_free(peg_state_t *peg);
 int peg_select_low(peg_state_t *peg, int player, int other);
 int peg_select_high(peg_state_t *peg, int player, int other);
 
-bool evaluate_hands(gamestate_t *game_state,
-                    int nplayers,
-                    hand_t *hands[],
-                    hand_t *crib,
-                    card_t starter);
+bool evaluate_hands(
+    gamestate_t *game_state, int nplayers, hand_t *hands[], hand_t *crib, card_t starter);
 bool peg_hands(int nplayers,
                peg_state_t *peg,
                hand_t *hands[],

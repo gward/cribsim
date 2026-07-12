@@ -21,8 +21,7 @@ bool sb_init(stringbuilder_t *sb, size_t init_cap) {
     return true;
 }
 
-void sb_close(stringbuilder_t *sb)
-{
+void sb_close(stringbuilder_t *sb) {
     if (sb->mem != NULL) {
         free(sb->mem);
         sb->mem = NULL;

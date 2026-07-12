@@ -1,0 +1,4 @@
+# Vendored third-party code (own style, not ours to reformat).
+c/log.c
+c/log.h
+c/rxilog/**

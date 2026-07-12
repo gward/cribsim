@@ -49,62 +49,61 @@ int twiddle(int *x, int *y, int *z, int *p) {
     while (p[j] <= 0) {
         j++;
     }
-    if (p[j-1] == 0) {
-        for (i = j-1; i != 1; i--) {
+    if (p[j - 1] == 0) {
+        for (i = j - 1; i != 1; i--) {
             p[i] = -1;
         }
         p[j] = 0;
         *x = *z = 0;
         p[1] = 1;
-        *y = j-1;
+        *y = j - 1;
     }
     else {
         if (j > 1) {
-            p[j-1] = 0;
+            p[j - 1] = 0;
         }
         do {
             j++;
-        }
-        while (p[j] > 0);
-        k = j-1;
+        } while (p[j] > 0);
+        k = j - 1;
         i = j;
         while (p[i] == 0) {
             p[i++] = -1;
         }
         if (p[i] == -1) {
             p[i] = p[k];
-            *z = p[k]-1;
-            *x = i-1;
-            *y = k-1;
+            *z = p[k] - 1;
+            *x = i - 1;
+            *y = k - 1;
             p[k] = -1;
         }
         else {
             if (i == p[0]) {
-                return(1);
+                return (1);
             }
             else {
                 p[j] = p[i];
-                *z = p[i]-1;
+                *z = p[i] - 1;
                 p[i] = 0;
-                *x = j-1;
-                *y = i-1;
+                *x = j - 1;
+                *y = i - 1;
             }
         }
     }
-    return(0);
+    return (0);
 }
 
 void inittwiddle(int m, int n, int *p) {
     int i;
-    p[0] = n+1;
-    for (i = 1; i != n-m+1; i++) {
+    p[0] = n + 1;
+    for (i = 1; i != n - m + 1; i++) {
         p[i] = 0;
     }
-    while (i != n+1) {
-        p[i] = i+m-n;
+    while (i != n + 1) {
+        p[i] = i + m - n;
         i++;
     }
-    p[n+1] = -2;
+    p[n + 1] = -2;
     if (m == 0) {
         p[1] = 1;
     }
@@ -119,9 +118,9 @@ void inittwiddle(int m, int n, int *p) {
 */
 #include <stdio.h>
 void demo_twiddle_1(int N, int M) {
-    int i, x, y, z, p[N+2], b[N];
+    int i, x, y, z, p[N + 2], b[N];
     inittwiddle(M, N, p);
-    for (i = 0; i != N-M; i++) {
+    for (i = 0; i != N - M; i++) {
         b[i] = 0;
         putchar('0');
     }
@@ -134,18 +133,18 @@ void demo_twiddle_1(int N, int M) {
         b[x] = 1;
         b[y] = 0;
         for (i = 0; i != N; i++) {
-            putchar(b[i]? '1': '0');
+            putchar(b[i] ? '1' : '0');
         }
         putchar('\n');
     }
 }
 
 void iter_combos_bitwise(int N, int M, void (*visit)(int, int[])) {
-    int i, x, y, z, p[N+2], b[N];
+    int i, x, y, z, p[N + 2], b[N];
 
     inittwiddle(M, N, p);
 
-    for (i = 0; i != N-M; i++) {
+    for (i = 0; i != N - M; i++) {
         b[i] = 0;
     }
     while (i != N) {
@@ -161,7 +160,7 @@ void iter_combos_bitwise(int N, int M, void (*visit)(int, int[])) {
 }
 
 void iter_combos(int N, int M, void (*visit)(int, int[], void *data), void *data) {
-    int i, x, y, z, p[N+2], a[N], c[M];
+    int i, x, y, z, p[N + 2], a[N], c[M];
 
     // a is the set of N values whose combinations we want: in this
     // case, the integers 0, 1, 2, ..., N-1.
@@ -174,7 +173,7 @@ void iter_combos(int N, int M, void (*visit)(int, int[], void *data), void *data
         c[i] = N - M + i;
     }
     assert(i == M);
-    assert(c[i-1] == N - 1);
+    assert(c[i - 1] == N - 1);
     visit(M, c, data);
 
     inittwiddle(M, N, p);

@@ -12,13 +12,13 @@
 
 gamestate_t gamestate_init() {
     return (gamestate_t) {
-        player_name: {PLAYER_NOBODY, PLAYER_NOBODY},
-        strategy: {
-            (strategy_t) {peg_func: NULL, discard_func: NULL},
-            (strategy_t) {peg_func: NULL, discard_func: NULL},
+        player_name : {PLAYER_NOBODY, PLAYER_NOBODY},
+        strategy : {
+            (strategy_t) {peg_func : NULL, discard_func : NULL},
+            (strategy_t) {peg_func : NULL, discard_func : NULL},
         },
-        score: {0, 0},
-        winner: PLAYER_NOBODY,
+        score : {0, 0},
+        winner : PLAYER_NOBODY,
     };
 }
 
@@ -63,7 +63,7 @@ typedef struct {
 } discard_data_t;
 
 void eval_candidate_simple(int ncards, int indexes[], void *_data) {
-    discard_data_t *data = (discard_data_t*) _data;
+    discard_data_t *data = (discard_data_t *) _data;
     hand_t *input = data->input;
     hand_t *candidate = data->candidate;
     hand_t *winner = data->winner;
@@ -101,16 +101,12 @@ void eval_candidate_simple(int ncards, int indexes[], void *_data) {
     score_t score = score_hand(candidate);
     if (score.total > data->top_score) {
         // Ignore ties -- just use the first candidate to get to the top.
-        log_trace("new winner: top_score = %d, score = %d",
-                  data->top_score,
-                  score.total);
+        log_trace("new winner: top_score = %d, score = %d", data->top_score, score.total);
         data->top_score = score.total;
         copy_hand(winner, candidate);
     }
     else {
-        log_trace("no change: top_score = %d, score = %d",
-                  data->top_score,
-                  score.total);
+        log_trace("no change: top_score = %d, score = %d", data->top_score, score.total);
     }
 }
 
@@ -234,7 +230,7 @@ char *parse_strategy(const char *spec, strategy_t *out) {
         return "strategy spec must be PEG,DISCARD (e.g. \"low,simple\")";
     }
     *comma = '\0';
-    char *peg_name     = buf;
+    char *peg_name = buf;
     char *discard_name = comma + 1;
 
     peg_func_t peg_func;
@@ -283,10 +279,7 @@ uint peg_count_pairs(peg_state_t *peg, int player) {
         }
     }
     if (pair_points > 0) {
-        log_trace("  found %d-of-a-kind, %d points to player %d",
-                  same_rank,
-                  pair_points,
-                  player);
+        log_trace("  found %d-of-a-kind, %d points to player %d", same_rank, pair_points, player);
     }
     return pair_points;
 }
@@ -319,10 +312,7 @@ uint peg_count_runs(peg_state_t *peg, int player) {
             prev_rank = candidate[i].rank;
         }
         if (found_run > 0) {
-            log_trace("  found run of %d: %d points to player %d",
-                      found_run,
-                      found_run,
-                      player);
+            log_trace("  found run of %d: %d points to player %d", found_run, found_run, player);
             return found_run;
         }
     }
@@ -399,8 +389,7 @@ bool peg_hands(int nplayers,
         // Both players blocked, but at least one has cards left: reset the
         // count and continue pegging.
         if (blocked[player] && blocked[other] && total_left > 0) {
-            log_trace("  both players blocked, still have %d cards left: need reset",
-                      total_left);
+            log_trace("  both players blocked, still have %d cards left: need reset", total_left);
             need_reset = true;
             continue;
         }
@@ -412,18 +401,15 @@ bool peg_hands(int nplayers,
         if (selected == -1) {
             log_trace("  player %d says go (is blocked)", player);
             if (!blocked[other]) {
-                log_trace("  player %d blocked: 1 point to player %d",
-                          player,
-                          other);
+                log_trace("  player %d blocked: 1 point to player %d", player, other);
                 peg->points[other]++;
                 if (callback(cb_data, other, 1)) {
                     return true;
                 }
             }
             else {
-                log_trace("  player %d blocked: no points to player %d (already blocked)",
-                          player,
-                          other);
+                log_trace(
+                    "  player %d blocked: no points to player %d (already blocked)", player, other);
             }
             blocked[player] = true;
             continue;
@@ -466,11 +452,12 @@ bool peg_hands(int nplayers,
                 }
             }
             else if (other_left == 0 && peg->avail[player]->ncards == 0) {
-                log_trace("  player %d played card %s, cur_count=%d: 1 point to player %d for last card",
-                          player,
-                          card_str(buf1, card),
-                          peg->cur_count,
-                          player);
+                log_trace(
+                    "  player %d played card %s, cur_count=%d: 1 point to player %d for last card",
+                    player,
+                    card_str(buf1, card),
+                    peg->cur_count,
+                    player);
                 peg->points[player] += 1;
                 if (callback(cb_data, player, 1)) {
                     return true;
@@ -499,11 +486,7 @@ bool peg_hands(int nplayers,
                       peg->cur_count);
         }
 
-
-        log_trace("  need_reset=%d, points={%d, %d}",
-                  need_reset,
-                  peg->points[0],
-                  peg->points[1]);
+        log_trace("  need_reset=%d, points={%d, %d}", need_reset, peg->points[0], peg->points[1]);
 
         // Check for M-of-a-kind.
         uint pair_points = peg_count_pairs(peg, player);
@@ -549,7 +532,6 @@ bool peg_hands(int nplayers,
     return false;
 }
 
-
 /* Add the starter card to a hand, sort the hand in-place, and set
  * hand->starter to record where position of 'starter' in 'hand'.
  */
@@ -581,11 +563,8 @@ bool update_scores(void *data, int player, uint points) {
     return false;
 }
 
-bool evaluate_hands(gamestate_t *game_state,
-                    int nplayers,
-                    hand_t *hands[],
-                    hand_t *crib,
-                    card_t starter) {
+bool evaluate_hands(
+    gamestate_t *game_state, int nplayers, hand_t *hands[], hand_t *crib, card_t starter) {
     assert(nplayers == 2);
     assert(hands[0]->ncards == hands[1]->ncards);
     assert(hands[0]->ncards == crib->ncards);
@@ -635,8 +614,7 @@ bool evaluate_hands(gamestate_t *game_state,
     return false;
 }
 
-bool play_hand(gamestate_t *game_state,
-               deck_t *deck) {
+bool play_hand(gamestate_t *game_state, deck_t *deck) {
     int nplayers = 2;
     int ncards = 6;
 
@@ -660,31 +638,16 @@ bool play_hand(gamestate_t *game_state,
     // Discard cards using configured strategies. Have to sort first because
     // that's part of the contract with discard strategy functions.
     sort_cards(hands[0]->ncards, hands[0]->cards);
-    log_cards(LOG_DEBUG,
-              "hands[0] after dealing",
-              hands[0]->ncards,
-              hands[0]->cards);
+    log_cards(LOG_DEBUG, "hands[0] after dealing", hands[0]->ncards, hands[0]->cards);
     game_state->strategy[pname[0]].discard_func(hands[0], crib);
-    log_cards(LOG_DEBUG,
-              "hands[0] after discard",
-              hands[0]->ncards,
-              hands[0]->cards);
+    log_cards(LOG_DEBUG, "hands[0] after discard", hands[0]->ncards, hands[0]->cards);
 
     sort_cards(hands[1]->ncards, hands[1]->cards);
-    log_cards(LOG_DEBUG,
-              "hands[1] after dealing",
-              hands[1]->ncards,
-              hands[1]->cards);
+    log_cards(LOG_DEBUG, "hands[1] after dealing", hands[1]->ncards, hands[1]->cards);
     game_state->strategy[pname[1]].discard_func(hands[1], crib);
-    log_cards(LOG_DEBUG,
-              "hands[1] after discard",
-              hands[1]->ncards,
-              hands[1]->cards);
+    log_cards(LOG_DEBUG, "hands[1] after discard", hands[1]->ncards, hands[1]->cards);
 
-    log_cards(LOG_DEBUG,
-              "crib after discard    ",
-              crib->ncards,
-              crib->cards);
+    log_cards(LOG_DEBUG, "crib after discard    ", crib->ncards, crib->cards);
 
     // Turn up the starter card.
     int starter_idx = rand() % (deck->ncards - deck_offset);
@@ -694,11 +657,7 @@ bool play_hand(gamestate_t *game_state,
     log_debug("starter: deck[%d] = %s", starter_idx, card_str(buf, starter));
 
     // Evaluate the results (including pegging).
-    bool done = evaluate_hands(game_state,
-                               nplayers,
-                               hands,
-                               crib,
-                               starter);
+    bool done = evaluate_hands(game_state, nplayers, hands, crib, starter);
 
     free(hands[0]);
     free(hands[1]);
@@ -733,13 +692,10 @@ playername_t play_game(deck_t *deck, strategy_t strategy_a, strategy_t strategy_
         stringbuilder_t winner_sb;
         sb_init(&winner_sb, 20);
         if (done) {
-            assert(game_state.winner == PLAYER_A ||
-                   game_state.winner == PLAYER_B);
+            assert(game_state.winner == PLAYER_A || game_state.winner == PLAYER_B);
             winner_name = playername_as_char(game_state.winner);
             assert(winner_name == 'a' || winner_name == 'b');
-            sb_printf(&winner_sb,
-                      "winner=%c",
-                      winner_name);
+            sb_printf(&winner_sb, "winner=%c", winner_name);
         }
         else {
             sb_append(&winner_sb, "no winner yet");

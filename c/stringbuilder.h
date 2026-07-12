@@ -3,8 +3,8 @@
 #ifndef _STRINGBUILDER_H
 #define _STRINGBUILDER_H
 
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef struct {
     char *mem;

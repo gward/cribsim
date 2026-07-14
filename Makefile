@@ -11,7 +11,10 @@ OBJ = $(patsubst %.c,build/%.o,$(notdir $(SRC)))
 FMT_SRC = $(filter-out c/log.c,$(SRC)) $(wildcard c/tests/*.c)
 FMT_HDR = $(filter-out c/log.h,$(wildcard c/*.h))
 
-TESTOBJ = $(filter-out build/cribsim.o,$(OBJ))
+TESTSRC = $(wildcard c/tests/*.c)
+TESTOBJ = \
+    $(filter-out build/cribsim.o,$(OBJ)) \
+    $(patsubst c/tests/%.c,build/tests/%.o,$(TESTSRC))
 $(info TESTOBJ=$(TESTOBJ))
 
 all: build/cribsim
@@ -19,11 +22,14 @@ all: build/cribsim
 build/%.o: c/%.c c/*.h
 	mkdir -p build && $(CC) $(CFLAGS) -c -o $@ $<
 
+build/tests/%.o: c/tests/%.c c/*.h c/tests/*.h
+	mkdir -p build/tests && $(CC) $(CFLAGS) -c -o $@ $<
+
 build/cribsim: $(OBJ)
 	mkdir -p build
 	$(CC) $(LDFLAGS) -o $@ $^
 
-build/check_cribsim: c/tests/check_cribsim.c $(TESTOBJ)
+build/check_cribsim: $(TESTOBJ)
 	mkdir -p build
 	$(CC) $(CFLAGS) -o $@ $^ -lcheck -lsubunit -lm
 

@@ -1,0 +1,341 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <check.h>
+
+#include "../play.h"
+#include "testutils.h"
+
+/* test case: play */
+
+typedef struct {
+    char *hand_0;
+    char *hand_1;
+    int expect_counts[MAX_ROUNDS];
+    uint expect_points[2];
+    char *expect_plays[MAX_ROUNDS];
+} peg_test_t;
+
+static peg_test_t peg_tests[] = {
+    // These two hands will result in no 15s, no pairs, no runs, no 31, and
+    // no starting over. Each player alternates playing their lowest card --
+    // 2, A, 2, A, 4, A, 6, 8 -- until both are out. Dealer (player 1) gets
+    // 1 point for the go.
+    {
+        hand_0 : "2♥ 2♥ 4♥ 6♥",
+        hand_1 : "A♠ A♣ A♥ 8♠",
+        expect_plays : {"2♥ A♠ 2♥ A♣ 4♥ A♥ 6♥ 8♠", NULL, NULL},
+        expect_counts : {25, -1, -1},
+        expect_points : {0, 1},
+    },
+
+    // Play A, 4, 3, 4, 3: 15 for player 0; then 6, 4, 6: 31 for player 1.
+    {
+        hand_0 : "A♥ 3♥ 3♦ 4♥",
+        hand_1 : "4♠ 4♣ 6♥ 6♠",
+        expect_plays : {"A♥ 4♠ 3♥ 4♣ 3♦ 6♥ 4♥ 6♠", NULL, NULL},
+        expect_counts : {31, -1, -1},
+        expect_points : {2, 2},
+    },
+
+    // Play 7, 4, 8, 5: count is 24 and player 0 is blocked.
+    // Play 7: count is 31, 2 points to player 1, reset count to zero.
+    // Play 10, 9, 10: count is 29, both players are out, 1 point to player 0.
+    {
+        hand_0 : "7♦ 8♣ 0♥ 0♣",
+        hand_1 : "4♦ 5♥ 7♣ 9♣",
+        expect_plays : {"7♦ 4♦ 8♣ 5♥ 7♣", "0♥ 9♣ 0♣", NULL},
+        expect_counts : {31, 29, -1},
+        expect_points : {1, 2},
+    },
+
+    // Play 0, K, 0: count is 30, both blocked, 1 point to player 0.
+    // Play K, 0, K: count is 30, both blocked, 1 point to player 1.
+    // Play 0, K: count is 20, both players are out, 1 point to player 1.
+    {
+        hand_0 : "0♣ 0♦ 0♥ 0♠",
+        hand_1 : "K♣ K♦ K♥ K♠",
+        expect_plays : {"0♣ K♣ 0♦", "K♦ 0♥ K♥", "0♠ K♠"},
+        expect_counts : {30, 30, 20},
+        expect_points : {1, 2},
+    },
+
+    // Play 2, 4, 2, 5, 2: count is 15, 2 points to player 0.
+    // Play 6, 9: count is 30, 1 point to player 1 for the go.
+    // Play 7: count is 7, both players out, 1 point to player 0.
+    {
+        hand_0 : "2♣ 2♦ 2♥ 9♠",
+        hand_1 : "4♥ 5♦ 6♦ 7♥",
+        expect_plays : {"2♣ 4♥ 2♦ 5♦ 2♥ 6♦ 9♠", "7♥", NULL},
+        expect_counts : {30, 7, -1},
+        expect_points : {3, 1},
+    },
+
+    // Play 3, A, 5, A, 5: count is 15, 2 points to player 0.
+    // Play 8: count is 23, player 0 blocked, 1 point to player 1.
+    // Play K, 9: count is 19, both players out, 1 point to player 1.
+    {
+        hand_0 : "3♣ 5♦ 5♥ K♣",
+        hand_1 : "A♦ A♠ 8♦ 9♥",
+        expect_plays : {"3♣ A♦ 5♦ A♠ 5♥ 8♦", "K♣ 9♥", NULL},
+        expect_counts : {23, 19, -1},
+        expect_points : {2, 2},
+    },
+
+    // Play J, A, J, 5: count is 26, both players blocked, 1 point to player 1.
+    // Play K, 7, K: count is 27, player 0 out, player 1 blocked: 1 point to player 0.
+    // Play 9: count is 9, 1 point to player 1 for last card.
+    {
+        hand_0 : "J♦ J♥ K♣ K♥",
+        hand_1 : "A♣ 5♦ 7♦ 9♦",
+        expect_plays : {"J♦ A♣ J♥ 5♦", "K♣ 7♦ K♥", "9♦"},
+        expect_counts : {26, 27, 9},
+        expect_points : {1, 2},
+    },
+
+    // This one has a 15, then a pair and a 31 -- all for player 0.
+    // Play 6, 2, 7: count is 15, 2 points to player 0.
+    // Play 8, 8: count is 31, pair for player 0 (4 more points).
+    // Play J, 8, Q: count is 28, last card for player 1 (1 point).
+    {
+        hand_0 : "6♠ 7♣ 8♥ 8♠",
+        hand_1 : "2♠ 8♦ J♣ Q♦",
+        expect_plays : {"6♠ 2♠ 7♣ 8♦ 8♥", "J♣ 8♠ Q♦", NULL},
+        expect_counts : {31, 28, -1},
+        expect_points : {6, 1},
+    },
+
+    // 3-of-a-kind and a run of 3: very exciting.
+    // Play 3, 5, 5: count is 13, 2 points to player 0 for pair.
+    // Play 5: count is 18, 6 points to player 1 for triple.
+    // Play 6: count is 24, player 1 blocked.
+    // Play 7: count is 31, 2 points plus 3 points for run of 3 to player 0.
+    // Play J, Q: count is 20, 1 point to player 1 for last card.
+    {
+        hand_0 : "3♠ 5♣ 6♥ 7♠",
+        hand_1 : "5♦ 5♠ J♣ Q♦",
+        expect_plays : {"3♠ 5♦ 5♣ 5♠ 6♥ 7♠", "J♣ Q♦", NULL},
+        expect_counts : {31, 20, -1},
+        expect_points : {7, 7},
+    },
+
+    // Play 6, 2, 7: count is 15, 2 points to player 0.
+    // Play 6, 8: count is 29, player 1 blocked, 3 to player 0 for run, plus 1 for go.
+    // Play 7, 9, K: count is 26, 1 point to player 1 for last card.
+    {
+        hand_0 : "6♦ 7♠ 8♥ 9♥",
+        hand_1 : "2♣ 6♠ 7♥ K♣",
+        expect_plays : {"6♦ 2♣ 7♠ 6♠ 8♥", "7♥ 9♥ K♣", NULL},
+        expect_counts : {29, 26, -1},
+        expect_points : {6, 1},
+    }};
+
+bool count_pegging(void *data, int player, uint points) {
+    gamestate_t *game_state = data;
+    playername_t *pname = game_state->player_name;
+    game_state->score[pname[player]] += points;
+    return false;
+}
+
+START_TEST(test_peg_hands) {
+    hand_t *hands[2] = {new_hand(4), new_hand(4)};
+    peg_state_t *peg = new_peg_state(4);
+    peg_func_t select_func[2] = {peg_select_low, peg_select_low};
+
+    // This test is purely about counting points during pegging, not about
+    // strategy. Deliberately using a naive and predictable strategy,
+    // peg_select_low(), to concentrate on just the pegging points.
+
+    int i = _i;
+    peg_test_t tc = peg_tests[i];
+
+    printf("peg_tests[%d]: expect_counts={%d, %d, %d}, expect_points={%d, %d}\n",
+           i,
+           tc.expect_counts[0],
+           tc.expect_counts[1],
+           tc.expect_counts[2],
+           tc.expect_points[0],
+           tc.expect_points[1]);
+
+    gamestate_t game_state = gamestate_init();
+    game_state.player_name[0] = PLAYER_B;
+    game_state.player_name[1] = PLAYER_A;
+    parse_hand(hands[0], tc.hand_0);
+    parse_hand(hands[1], tc.hand_1);
+    peg_hands(2, peg, hands, select_func, count_pegging, &game_state);
+
+    printf("peg_tests[%d]: actual_counts={%d, %d, %d}, actual_points={%d, %d}\n",
+           i,
+           peg->counts[0],
+           peg->counts[1],
+           peg->counts[2],
+           peg->points[0],
+           peg->points[1]);
+
+    ck_assert_int_gt(peg->num_rounds, 0);
+    ck_assert_int_le(peg->num_rounds, MAX_ROUNDS);
+    for (int j = 0; j < MAX_ROUNDS; j++) {
+        ck_assert_int_eq(peg->counts[j], tc.expect_counts[j]);
+    }
+    ck_assert_int_eq(peg->points[0], tc.expect_points[0]);
+    ck_assert_int_eq(peg->points[1], tc.expect_points[1]);
+
+    size_t buf_size = 50;
+    char buf[buf_size];
+
+    for (i = 0; i < MAX_ROUNDS; i++) {
+        hand_t *played = peg->cards_played[i];
+        if (tc.expect_plays[i] == NULL) {
+            ck_assert_ptr_null(played);
+        }
+        else {
+            ck_assert_ptr_nonnull(played);
+            ck_assert_str_eq(tc.expect_plays[i], hand_str(buf, buf_size, played));
+        }
+    }
+    peg_state_free(peg);
+}
+END_TEST
+
+START_TEST(test_add_starter) {
+    hand_t *hand = new_hand(5);
+    parse_hand(hand, "4♠ 7♠ 9♠ 0♠");
+    add_starter(hand, (card_t) {rank : RANK_5, suit : SUIT_CLUB});
+
+    ck_assert_int_eq(hand->starter, 1);
+    ck_assert_int_eq(hand->cards[1].rank, RANK_5);
+    ck_assert_int_eq(hand->cards[1].suit, SUIT_CLUB);
+}
+END_TEST
+
+typedef struct {
+    char *hand_0;
+    char *hand_1;
+    char *crib;
+    card_t starter;
+    uint initial_scores[2];
+    uint expect_scores[2];
+    playername_t expect_winner;
+    bool expect_done;
+} evaluate_hands_test_t;
+
+static evaluate_hands_test_t evaluate_hands_tests[] = {
+    // Two simple hands:
+    // - player 1 (dealer) gets 1 point pegging for last card
+    // - player 0 gets 1 pair = 2 points
+    // - player 1 gets 3 pairs = 6 points
+    // - crib is totally useless
+    {
+        hand_0 : "2♥ 2♦ 4♥ 6♥",
+        hand_1 : "A♠ A♣ A♥ 8♠",
+        crib : "2♠ 4♣ 6♣ 8♣",
+        starter : {rank : RANK_10, suit : SUIT_CLUB},
+        initial_scores : {0, 0},
+        expect_scores : {2, 7},
+        expect_winner : PLAYER_NOBODY,
+        expect_done : false,
+    },
+
+    // Same, but this time the starter card is a jack: dealer gets 2 additional points.
+    {
+        hand_0 : "2♥ 2♦ 4♥ 6♥",
+        hand_1 : "A♠ A♣ A♥ 8♠",
+        crib : "2♠ 4♣ 6♣ 8♣",
+        starter : {rank : RANK_JACK, suit : SUIT_CLUB},
+        initial_scores : {0, 0},
+        expect_scores : {2, 9},
+        expect_winner : PLAYER_NOBODY,
+        expect_done : false,
+    },
+
+    // Game is nearly over: player 0 has 120, player 1 has 119. Turning up a
+    // jack bumps player 1 over the edge and we have a winner. Player 0 doesn't
+    // get a chance to count anything: no pegging, no scoring of hands.
+    {
+        hand_0 : "2♥ 2♦ 4♥ 6♥",
+        hand_1 : "A♠ A♣ A♥ 8♠",
+        crib : "2♠ 4♣ 6♣ 8♣",
+        starter : {rank : RANK_JACK, suit : SUIT_CLUB},
+        initial_scores : {120, 119},
+        expect_scores : {120, 121},
+        expect_winner : PLAYER_B,
+        expect_done : true,
+    },
+};
+
+START_TEST(test_evaluate_hands) {
+    hand_t *hands[2] = {new_hand(5), new_hand(5)};
+    hand_t *crib = new_hand(5);
+
+    evaluate_hands_test_t tc = evaluate_hands_tests[_i];
+
+    parse_hand(hands[0], tc.hand_0);
+    parse_hand(hands[1], tc.hand_1);
+    parse_hand(crib, tc.crib);
+
+    gamestate_t game_state = gamestate_init();
+    game_state.strategy[PLAYER_A].peg_func = peg_select_low;
+    game_state.strategy[PLAYER_B].peg_func = peg_select_low;
+    game_state.score[PLAYER_A] = tc.initial_scores[PLAYER_A];
+    game_state.score[PLAYER_B] = tc.initial_scores[PLAYER_B];
+    game_state.player_name[0] = PLAYER_A;
+    game_state.player_name[1] = PLAYER_B;
+
+    bool done = evaluate_hands(&game_state, 2, hands, crib, tc.starter);
+    ck_assert_int_eq(game_state.score[PLAYER_A], tc.expect_scores[PLAYER_A]);
+    ck_assert_int_eq(game_state.score[PLAYER_B], tc.expect_scores[PLAYER_B]);
+    ck_assert_int_eq(game_state.winner, tc.expect_winner);
+    ck_assert(done == tc.expect_done);
+
+    free(hands[0]);
+    free(hands[1]);
+    free(crib);
+}
+END_TEST
+
+START_TEST(test_parse_strategy_valid) {
+    strategy_t s;
+
+    ck_assert_ptr_null(parse_strategy("low,simple", &s));
+    ck_assert_ptr_eq(s.peg_func, peg_select_low);
+    ck_assert_ptr_eq(s.discard_func, discard_simple);
+
+    ck_assert_ptr_null(parse_strategy("low,random", &s));
+    ck_assert_ptr_eq(s.peg_func, peg_select_low);
+    ck_assert_ptr_eq(s.discard_func, discard_random);
+
+    ck_assert_ptr_null(parse_strategy("high,simple", &s));
+    ck_assert_ptr_eq(s.peg_func, peg_select_high);
+    ck_assert_ptr_eq(s.discard_func, discard_simple);
+
+    ck_assert_ptr_null(parse_strategy("high,random", &s));
+    ck_assert_ptr_eq(s.peg_func, peg_select_high);
+    ck_assert_ptr_eq(s.discard_func, discard_random);
+}
+END_TEST
+
+START_TEST(test_parse_strategy_invalid) {
+    strategy_t s;
+
+    ck_assert_ptr_nonnull(parse_strategy("low", &s));  // missing comma
+    ck_assert_ptr_nonnull(parse_strategy("bad,simple", &s));  // unknown peg
+    ck_assert_ptr_nonnull(parse_strategy("low,bad", &s));  // unknown discard
+    ck_assert_ptr_nonnull(parse_strategy(",simple", &s));  // empty peg token
+    ck_assert_ptr_nonnull(parse_strategy("low,", &s));  // empty discard token
+}
+END_TEST
+
+void add_play_tests(Suite *suite) {
+    TCase *tc_play = tcase_create("play");
+
+    int ntests;
+    ntests = sizeof(peg_tests) / sizeof(peg_test_t);
+    tcase_add_loop_test(tc_play, test_peg_hands, 0, ntests);
+
+    tcase_add_test(tc_play, test_add_starter);
+    ntests = sizeof(evaluate_hands_tests) / sizeof(evaluate_hands_test_t);
+    tcase_add_loop_test(tc_play, test_evaluate_hands, 0, ntests);
+    tcase_add_test(tc_play, test_parse_strategy_valid);
+    tcase_add_test(tc_play, test_parse_strategy_invalid);
+    suite_add_tcase(suite, tc_play);
+}

@@ -71,7 +71,7 @@ int card_cmp(card_t *card_a, card_t *card_b) {
     return val_a - val_b;
 }
 
-char *cards_str(char buf[], size_t size, int ncards, card_t cards[]) {
+char *cards_str(char buf[], size_t size, size_t ncards, card_t cards[]) {
     size_t size_left = size;
     char *cur = buf;
     for (int i = 0; i < ncards; i++) {
@@ -93,7 +93,7 @@ char *cards_str(char buf[], size_t size, int ncards, card_t cards[]) {
     return buf;
 }
 
-void log_cards(int level, char *prefix, int ncards, card_t cards[]) {
+void log_cards(int level, char *prefix, size_t ncards, card_t cards[]) {
     size_t bufsize = 5 * ncards;
     char buf[bufsize];
 
@@ -111,7 +111,7 @@ static int cmp_cards(const void *a, const void *b) {
 }
 
 /* Sort an array of cards in place (by rank then suit). */
-void sort_cards(int ncards, card_t cards[]) {
+void sort_cards(size_t ncards, card_t cards[]) {
     qsort(cards, ncards, sizeof(card_t), cmp_cards);
 }
 
@@ -120,7 +120,7 @@ deck_t *new_deck() {
     // sanity check to ensure I understand struct layout
     assert(sizeof(card_t) == sizeof(uint));
 
-    int ncards = 52;
+    size_t ncards = 52;
     deck_t *deck = malloc(sizeof(deck_t) + (ncards * sizeof(card_t)));
     deck->ncards = ncards;
     int i = 0;
@@ -146,8 +146,8 @@ void shuffle_deck(deck_t *deck) {
 }
 
 /* Allocate an empty hand of the requested size */
-hand_t *new_hand(int size) {
-    int nbytes = sizeof(hand_t) + (size * sizeof(card_t));
+hand_t *new_hand(size_t size) {
+    size_t nbytes = sizeof(hand_t) + (size * sizeof(card_t));
     hand_t *hand = calloc(1, nbytes);
     hand->size = size;
     hand->starter = -1;

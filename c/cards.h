@@ -50,10 +50,10 @@ extern uint rank_value[14];
 char *card_debug(char result[], card_t card);
 char *card_str(char result[], card_t card);
 int card_cmp(card_t *, card_t *);
-void log_cards(int level, char *prefix, int ncards, card_t cards[]);
-void sort_cards(int ncards, card_t cards[]);
+void log_cards(int level, char *prefix, size_t ncards, card_t cards[]);
+void sort_cards(size_t ncards, card_t cards[]);
 
-hand_t *new_hand(int ncards);
+hand_t *new_hand(size_t ncards);
 char *hand_str(char *buf, size_t size, hand_t *hand);
 void hand_append(hand_t *dest, card_t card);
 void hand_truncate(hand_t *dest);

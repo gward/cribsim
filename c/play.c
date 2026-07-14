@@ -163,7 +163,7 @@ void discard_random(hand_t *hand, hand_t *crib) {
     free(tmp_hand);
 }
 
-peg_state_t *new_peg_state(int ncards) {
+peg_state_t *new_peg_state(size_t ncards) {
     peg_state_t *peg = (peg_state_t *) calloc(1, sizeof(peg_state_t));
     peg->num_rounds = 0;
     peg->avail[0] = new_hand(ncards);
@@ -616,7 +616,7 @@ bool evaluate_hands(
 
 bool play_hand(gamestate_t *game_state, deck_t *deck) {
     int nplayers = 2;
-    int ncards = 6;
+    size_t ncards = 6;
 
     hand_t *hands[2];
     hands[0] = new_hand(ncards);

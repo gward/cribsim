@@ -85,7 +85,7 @@ typedef struct _peg_state {
     hand_t *avail[2];
 } peg_state_t;
 
-peg_state_t *new_peg_state(int ncards);
+peg_state_t *new_peg_state(size_t ncards);
 void peg_state_free(peg_state_t *peg);
 
 int peg_select_low(peg_state_t *peg, int player, int other);

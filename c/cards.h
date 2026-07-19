@@ -62,7 +62,9 @@ void hand_delete(hand_t *dest, int del_idx);
 void copy_hand(hand_t *dest, hand_t *src);
 void hand_set_card(hand_t *hand, int idx, rank_t rank, suit_t suit);
 
-deck_t *new_deck();
+deck_t *new_deck(int ncards);
+void init_deck(deck_t *deck);
+void free_deck(deck_t *deck);
 void shuffle_deck(deck_t *deck);
 
 #endif

@@ -20,7 +20,8 @@ int main(int argc, char *argv[]) {
 
     int ngames = 100;
     int games_won[2] = {0, 0};
-    deck_t *deck = new_deck();
+    deck_t *deck = new_deck(52);
+    init_deck(deck);
 
     for (int gidx = 0; gidx < ngames; gidx++) {
         playername_t winner = play_game(deck);
@@ -30,6 +31,6 @@ int main(int argc, char *argv[]) {
              games_won[PLAYER_A],
              games_won[PLAYER_B]);
 
-    free(deck);
+    free_deck(deck);
     return 0;
 }

@@ -260,8 +260,9 @@ START_TEST(test_hand_str) {
 }
 END_TEST
 
-START_TEST(test_new_deck) {
-    deck_t *deck = new_deck();
+START_TEST(test_init_deck) {
+    deck_t *deck = new_deck(52);
+    init_deck(deck);
     ck_assert_int_eq(deck->ncards, 52);
     ck_assert_int_eq(deck->cards[0].rank, RANK_ACE);
     ck_assert_int_eq(deck->cards[0].suit, SUIT_CLUB);
@@ -273,7 +274,7 @@ START_TEST(test_new_deck) {
     ck_assert_int_eq(deck->cards[3].suit, SUIT_SPADE);
     ck_assert_int_eq(deck->cards[51].rank, RANK_KING);
     ck_assert_int_eq(deck->cards[51].suit, SUIT_SPADE);
-    free(deck);
+    free_deck(deck);
 }
 
 /* test case: score */
@@ -766,7 +767,7 @@ Suite *cribsum_suite(void) {
     tcase_add_test(tc_cards, test_card_cmp);
     tcase_add_test(tc_cards, test_hand_delete);
     tcase_add_test(tc_cards, test_hand_str);
-    tcase_add_test(tc_cards, test_new_deck);
+    tcase_add_test(tc_cards, test_init_deck);
     suite_add_tcase(suite, tc_cards);
 
     tcase_add_test(tc_score, test_count_15s);

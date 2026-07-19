@@ -115,14 +115,21 @@ void sort_cards(int ncards, card_t cards[]) {
     qsort(cards, ncards, sizeof(card_t), cmp_cards);
 }
 
-/* allocate and populate a new deck with the standard 52 cards, sorted */
-deck_t *new_deck() {
-    // sanity check to ensure I understand struct layout
-    assert(sizeof(card_t) == sizeof(uint));
-
-    int ncards = 52;
-    deck_t *deck = malloc(sizeof(deck_t) + (ncards * sizeof(card_t)));
+/* Allocate new deck of the specified size; leave all cards zeroed. */
+deck_t *new_deck(int ncards) {
+    int nbytes = sizeof(deck_t) + (ncards * sizeof(card_t));
+    deck_t *deck = calloc(1, nbytes);
     deck->ncards = ncards;
+    return deck;
+}
+
+void free_deck(deck_t *deck) {
+    free(deck);
+}
+
+/* Populate a deck with the standard 52 cards (sorted). */
+void init_deck(deck_t *deck) {
+    assert(deck->ncards == 52);
     int i = 0;
     for (int rank = RANK_ACE; rank <= RANK_KING; rank++) {
         for (int suit = SUIT_CLUB; suit <= SUIT_SPADE; suit++) {
@@ -131,7 +138,6 @@ deck_t *new_deck() {
             i++;
         }
     }
-    return deck;
 }
 
 /* shuffle an existing deck in place */

@@ -61,10 +61,10 @@ typedef struct {
     hand_t *input;
     hand_t *candidate;
     hand_t *winner;
-} discard_data_t;
+} discard_simple_t;
 
 void eval_candidate_simple(int ncards, int indexes[], void *_data) {
-    discard_data_t *data = (discard_data_t *) _data;
+    discard_simple_t *data = (discard_simple_t*) _data;
     hand_t *input = data->input;
     hand_t *candidate = data->candidate;
     hand_t *winner = data->winner;
@@ -118,7 +118,7 @@ void discard_simple(hand_t *hand, hand_t *crib) {
     hand_t *candidate = new_hand(4);
     hand_t *winner = new_hand(4);
 
-    discard_data_t data = {0, hand, candidate, winner};
+    discard_simple_t data = {0, hand, candidate, winner};
     iter_combos(hand->ncards, 4, eval_candidate_simple, (void *) &data);
 
     // In case every candidate had score 0, arbitrarily pick the last one.
@@ -145,6 +145,116 @@ void discard_simple(hand_t *hand, hand_t *crib) {
 
     free(winner);
     free(candidate);
+}
+
+/*
+ * Figure out the possible starters: i.e. the 52 - 6 = 46 cards
+ * that are not in 'hand'.
+ */
+deck_t *list_possible_starters(hand_t *hand) {
+    deck_t *full_deck = new_deck(52);
+    deck_t *starters = new_deck(52 - hand->ncards);
+    init_deck(full_deck);
+
+    for (int i = 0, j = 0; i < full_deck->ncards; i++) {
+        bool in_hand = false;
+        for (int k = 0; k < hand->ncards; k++) {
+            if (card_cmp(&full_deck->cards[i], &hand->cards[k]) == 0) {
+                in_hand = true;
+                break;
+            }
+        }
+
+        if (!in_hand) {
+            starters->cards[j++] = full_deck->cards[i];
+        }
+    }
+
+    /* char buf[5]; */
+    /* printf("possible starters\n"); */
+    /* for (int j = 0; j < starters->ncards; j++) { */
+    /*     printf("  %s\n", card_str(buf, starters->cards[j])); */
+    /* } */
+
+    free_deck(full_deck);
+    return starters;
+}
+
+typedef struct {
+    deck_t *starters;
+    float top_expected_score;
+    hand_t *input;
+    hand_t *candidate;
+    hand_t *winner;
+} discard_probabilistic_data_t;
+
+void eval_candidate_expected(int ncards, int indexes[], void *_data) {
+    discard_probabilistic_data_t *data = (discard_probabilistic_data_t *) _data;
+    hand_t *input = data->input;
+    hand_t *candidate = data->candidate;
+    hand_t *winner = data->winner;
+    deck_t *starters = data->starters;
+
+    float weight = 1.0 / starters->ncards;
+    float expected_score = 0.0;
+    for (int s = 0; s < starters->ncards; s++) {
+        hand_truncate(candidate);
+        for (int i = 0; i < ncards; i++) {
+            hand_append(candidate, input->cards[indexes[i]]);
+        }
+        add_starter(candidate, starters->cards[s]);
+
+        score_t score = score_hand(candidate);
+        expected_score += weight * score.total;
+    }
+
+    if (expected_score > data->top_expected_score) {
+        log_trace("new winner: top_expected_score = %f, expected_score = %f",
+                   data->top_expected_score, expected_score);
+        data->top_expected_score = expected_score;
+
+        hand_truncate(candidate);
+        for (int i = 0; i < ncards; i++) {
+            hand_append(candidate, input->cards[indexes[i]]);
+        }
+        copy_hand(winner, candidate);
+    }
+}
+
+/*
+ * Discard two cards to maximize the expected score, including both
+ * fixed and probabilistic contributions.
+ */
+void discard_probabilistic(hand_t *hand, hand_t *crib) {
+    deck_t *starters = list_possible_starters(hand);
+
+    hand_t *candidate = new_hand(5);
+    hand_t *winner = new_hand(4);
+
+    // Evaluate every combination of hand along with each possible starter.
+    discard_probabilistic_data_t data = {starters, 0.0, hand, candidate, winner};
+    iter_combos(hand->ncards, 4, eval_candidate_expected, (void *) &data);
+
+    // Add discarded cards to the crib.
+    for (int i = 0; i < hand->ncards; i++) {
+        bool kept = false;
+        for (int j = 0; j < winner->ncards; j++) {
+            if (card_cmp(&hand->cards[i], &winner->cards[j]) == 0) {
+                kept = true;
+                break;
+            }
+        }
+        if (!kept) {
+            hand_append(crib, hand->cards[i]);
+        }
+    }
+
+    log_cards(LOG_TRACE, "winning candidate", winner->ncards, winner->cards);
+    copy_hand(hand, winner);
+
+    free(winner);
+    free(candidate);
+    free_deck(starters);
 }
 
 /* Discard two cards at random. */
@@ -252,8 +362,11 @@ char *parse_strategy(const char *spec, strategy_t *out) {
     else if (strcmp(discard_name, "random") == 0) {
         discard_func = discard_random;
     }
+    else if (strcmp(discard_name, "probabilistic") == 0) {
+        discard_func = discard_probabilistic;
+    }
     else {
-        return "unknown discard strategy (choices: simple, random)";
+        return "unknown discard strategy (choices: simple, random, probabilistic)";
     }
 
     *out = (strategy_t) {.peg_func = peg_func, .discard_func = discard_func};

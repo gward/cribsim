@@ -293,6 +293,24 @@ START_TEST(test_evaluate_hands) {
 }
 END_TEST
 
+START_TEST(test_discard_probabilistic) {
+    hand_t *hand = new_hand(6);
+    hand_t *crib = new_hand(6);
+    parse_hand(hand, "2♥ 3♦ 4♣ 5♠ 6♥ 7♣");
+    hand_truncate(crib);
+
+    // Just testing that it doesn't crash, and does leave hand/crib at the sizes the rest
+    // of the game expects.
+    discard_probabilistic(hand, crib);
+
+    ck_assert_uint_eq(hand->ncards, 4);
+    ck_assert_uint_eq(crib->ncards, 2);
+
+    free(hand);
+    free(crib);
+}
+END_TEST
+
 START_TEST(test_parse_strategy_valid) {
     strategy_t s;
 
@@ -311,6 +329,10 @@ START_TEST(test_parse_strategy_valid) {
     ck_assert_ptr_null(parse_strategy("high,random", &s));
     ck_assert_ptr_eq(s.peg_func, peg_select_high);
     ck_assert_ptr_eq(s.discard_func, discard_random);
+
+    ck_assert_ptr_null(parse_strategy("high,probabilistic", &s));
+    ck_assert_ptr_eq(s.peg_func, peg_select_high);
+    ck_assert_ptr_eq(s.discard_func, discard_probabilistic);
 }
 END_TEST
 
@@ -337,5 +359,6 @@ void add_play_tests(Suite *suite) {
     tcase_add_loop_test(tc_play, test_evaluate_hands, 0, ntests);
     tcase_add_test(tc_play, test_parse_strategy_valid);
     tcase_add_test(tc_play, test_parse_strategy_invalid);
+    tcase_add_test(tc_play, test_discard_probabilistic);
     suite_add_tcase(suite, tc_play);
 }

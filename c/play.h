@@ -63,6 +63,7 @@ playername_t play_game(deck_t *deck, strategy_t strategy_a, strategy_t strategy_
 
 void discard_simple(hand_t *hand, hand_t *crib);
 void discard_random(hand_t *hand, hand_t *crib);
+void discard_probabilistic(hand_t *hand, hand_t *crib);
 
 #define MAX_ROUNDS 3
 

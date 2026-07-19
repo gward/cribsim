@@ -50,6 +50,7 @@ extern uint rank_value[14];
 char *card_debug(char result[], card_t card);
 char *card_str(char result[], card_t card);
 int card_cmp(card_t *, card_t *);
+char *cards_str(char buf[], size_t size, size_t ncards, card_t cards[]);
 void log_cards(int level, char *prefix, size_t ncards, card_t cards[]);
 void sort_cards(size_t ncards, card_t cards[]);
 
@@ -61,7 +62,9 @@ void hand_delete(hand_t *dest, int del_idx);
 void copy_hand(hand_t *dest, hand_t *src);
 void hand_set_card(hand_t *hand, int idx, rank_t rank, suit_t suit);
 
-deck_t *new_deck();
+deck_t *new_deck(size_t ncards);
+void init_deck(deck_t *deck);
+void free_deck(deck_t *deck);
 void shuffle_deck(deck_t *deck);
 
 #endif

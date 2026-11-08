@@ -23,10 +23,10 @@ typedef struct {
 } count_data_t;
 
 /* Examine a single subset of a hand, counting whether it sums to 15. */
-void visit_count_15s(int ncards, int indexes[], void *_data) {
+void visit_count_15s(uint ncards, int indexes[], void *_data) {
     count_data_t *data = (count_data_t *) _data;
     uint sum = 0;
-    for (int i = 0; i < ncards; i++) {
+    for (uint i = 0; i < ncards; i++) {
         sum += rank_value[data->hand->cards[indexes[i]].rank];
     }
     if (sum == 15) {
@@ -54,8 +54,8 @@ uint count_pairs(hand_t *hand) {
     if (ncards == 0) {
         return 0;
     }
-    for (int i = 0; i < ncards - 1; i++) {
-        for (int j = i + 1; j < ncards && cards[j].rank == cards[i].rank; j++) {
+    for (uint i = 0; i < ncards - 1; i++) {
+        for (uint j = i + 1; j < ncards && cards[j].rank == cards[i].rank; j++) {
             num_pairs++;
         }
     }
@@ -66,7 +66,7 @@ uint count_runs(hand_t *hand) {
     uint run_points = 0;
     uint current_run = 1;
     uint repeats = 1;
-    int i;
+    uint i;
     for (i = 1; i < hand->ncards; i++) {
         rank_t prev_rank = hand->cards[i - 1].rank;
         rank_t cur_rank = hand->cards[i].rank;
@@ -121,8 +121,8 @@ uint count_flush(hand_t *hand) {
     // If everything except the starter is of the same suite, that's a flush.
     suit_t flush_suit = SUIT_NONE;
     uint cur_flush = 0;
-    for (int i = 0; i < hand->ncards; i++) {
-        if (hand->starter > -1 && i == hand->starter) {
+    for (uint i = 0; i < hand->ncards; i++) {
+        if (hand->starter > -1 && i == (uint) hand->starter) {
             // Skip the starter card, no matter where we are in the hand.
             continue;
         }
@@ -159,10 +159,10 @@ uint count_right_jack(hand_t *hand) {
     if (hand->starter < 0) {
         return 0;
     }
-    assert(hand->starter < hand->ncards);
+    assert((uint) hand->starter < hand->ncards);
 
     suit_t starter_suit = hand->cards[hand->starter].suit;
-    for (int i = 0; i < hand->ncards; i++) {
+    for (uint i = 0; i < hand->ncards; i++) {
         card_t card = hand->cards[i];
         if (card.rank == RANK_JACK && card.suit == starter_suit) {
             return 1;

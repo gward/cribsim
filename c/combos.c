@@ -88,7 +88,7 @@ static int combos_4_2[7][2] = {
     {-1, -1},
 };
 
-void iter_combos(int n, int m, void (*visit)(int, int[], void *), void *data) {
+void iter_combos(int n, int m, void (*visit)(unsigned int, int[], void *), void *data) {
     if (n == m) {
         int combo[n];
         for (int i = 0; i < n; i++) {
@@ -147,12 +147,12 @@ typedef struct {
     FILE *outf;
 } visit_t;
 
-void visit(int m, int indexes[], void *data) {
+void visit(unsigned int m, int indexes[], void *data) {
     visit_t *visit_data = (visit_t *) data;
     FILE *outf = visit_data->outf;
 
     fprintf(outf, "[");
-    int i;
+    unsigned int i;
     for (i = 0; i < m - 1; i++) {
         fprintf(outf, "%d, ", indexes[i]);
     }

@@ -14,4 +14,4 @@
  *      ...
  *   visit(4, {2, 3, 4, 5}, data);
  */
-void iter_combos(int n, int m, void (*visit)(int, int[], void *), void *data);
+void iter_combos(int n, int m, void (*visit)(unsigned int, int[], void *), void *data);

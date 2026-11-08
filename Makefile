@@ -1,4 +1,4 @@
-CFLAGS = -g -Wall -Werror -std=c99
+CFLAGS = -g -Wall -Wsign-compare -Werror -std=c99
 LDFLAGS = -g
 
 SRC = $(wildcard c/*.c)

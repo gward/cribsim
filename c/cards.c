@@ -74,7 +74,7 @@ int card_cmp(card_t *card_a, card_t *card_b) {
 char *cards_str(char buf[], size_t size, size_t ncards, card_t cards[]) {
     size_t size_left = size;
     char *cur = buf;
-    for (int i = 0; i < ncards; i++) {
+    for (uint i = 0; i < ncards; i++) {
         if (size_left < 5) {
             break;
         }
@@ -143,8 +143,8 @@ void init_deck(deck_t *deck) {
 /* shuffle an existing deck in place */
 void shuffle_deck(deck_t *deck) {
     card_t tmp;
-    for (int i = 0; i < deck->ncards; i++) {
-        int j = i + rand() % (deck->ncards - i);
+    for (uint i = 0; i < deck->ncards; i++) {
+        uint j = i + rand() % (deck->ncards - i);
         tmp = deck->cards[i];
         deck->cards[i] = deck->cards[j];
         deck->cards[j] = tmp;
@@ -175,9 +175,9 @@ void hand_truncate(hand_t *dest) {
     memset(dest->cards, 0, sizeof(card_t) * dest->size);
 }
 
-void hand_delete(hand_t *dest, int del_idx) {
+void hand_delete(hand_t *dest, uint del_idx) {
     assert(del_idx < dest->ncards);
-    int i;
+    uint i;
     for (i = del_idx; i < dest->ncards - 1; i++) {
         dest->cards[i] = dest->cards[i + 1];
     }
@@ -191,7 +191,7 @@ void copy_hand(hand_t *dest, hand_t *src) {
     memcpy(dest->cards, src->cards, sizeof(card_t) * src->ncards);
 }
 
-void hand_set_card(hand_t *hand, int idx, rank_t rank, suit_t suit) {
+void hand_set_card(hand_t *hand, uint idx, rank_t rank, suit_t suit) {
     assert(hand->ncards > idx);
     hand->cards[idx].rank = rank;
     hand->cards[idx].suit = suit;

@@ -58,9 +58,9 @@ hand_t *new_hand(size_t ncards);
 char *hand_str(char *buf, size_t size, hand_t *hand);
 void hand_append(hand_t *dest, card_t card);
 void hand_truncate(hand_t *dest);
-void hand_delete(hand_t *dest, int del_idx);
+void hand_delete(hand_t *dest, uint del_idx);
 void copy_hand(hand_t *dest, hand_t *src);
-void hand_set_card(hand_t *hand, int idx, rank_t rank, suit_t suit);
+void hand_set_card(hand_t *hand, uint idx, rank_t rank, suit_t suit);
 
 deck_t *new_deck(size_t ncards);
 void init_deck(deck_t *deck);

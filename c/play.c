@@ -33,10 +33,10 @@ char playername_as_char(playername_t name) {
 }
 
 /* Drop one card from hand (modify hand in place). */
-void drop_one(hand_t *hand, int drop) {
+void drop_one(hand_t *hand, uint drop) {
     card_t keep_cards[6];
 
-    for (int src = 0, dst = 0; src < hand->ncards; src++) {
+    for (uint src = 0, dst = 0; src < hand->ncards; src++) {
         if (src != drop) {
             keep_cards[dst++] = hand->cards[src];
         }
@@ -46,9 +46,9 @@ void drop_one(hand_t *hand, int drop) {
 }
 
 /* Copy src_hand into dest_hand, dropping two cards along the way. */
-void drop_two(hand_t *dest_hand, hand_t *src_hand, int drop1, int drop2) {
+void drop_two(hand_t *dest_hand, hand_t *src_hand, uint drop1, uint drop2) {
     assert(dest_hand->size >= src_hand->ncards - 2);
-    for (int src = 0, dst = 0; src < src_hand->ncards; src++) {
+    for (uint src = 0, dst = 0; src < src_hand->ncards; src++) {
         if (src != drop1 && src != drop2) {
             dest_hand->cards[dst++] = src_hand->cards[src];
         }
@@ -63,7 +63,7 @@ typedef struct {
     hand_t *winner;
 } discard_simple_t;
 
-void eval_candidate_simple(int ncards, int indexes[], void *_data) {
+void eval_candidate_simple(uint ncards, int indexes[], void *_data) {
     discard_simple_t *data = (discard_simple_t*) _data;
     hand_t *input = data->input;
     hand_t *candidate = data->candidate;
@@ -79,9 +79,10 @@ void eval_candidate_simple(int ncards, int indexes[], void *_data) {
     char buf[size];
     strncpy(buf, "eval_candidate_simple: {", size);
     offset = strlen(buf);
-    for (int i = 0; i < ncards; i++) {
+    for (uint i = 0; i < ncards; i++) {
         int nbytes = snprintf(buf + offset, size - offset, "%d", indexes[i]);
-        assert(nbytes < size - offset);
+        assert(nbytes > 0);
+        assert((uint) nbytes < size - offset);
         offset += nbytes;
         if (i < ncards - 1) {
             assert(size - offset >= 1);
@@ -94,7 +95,7 @@ void eval_candidate_simple(int ncards, int indexes[], void *_data) {
     log_trace(buf);
 
     hand_truncate(candidate);
-    for (int i = 0; i < ncards; i++) {
+    for (uint i = 0; i < ncards; i++) {
         hand_append(candidate, input->cards[indexes[i]]);
     }
     log_cards(LOG_TRACE, "candidate hand", candidate->ncards, candidate->cards);
@@ -127,9 +128,9 @@ void discard_simple(hand_t *hand, hand_t *crib) {
     }
 
     // Add discarded cards to the crib.
-    for (int i = 0; i < hand->ncards; i++) {
+    for (uint i = 0; i < hand->ncards; i++) {
         bool kept = false;
-        for (int j = 0; j < winner->ncards; j++) {
+        for (uint j = 0; j < winner->ncards; j++) {
             if (card_cmp(&hand->cards[i], &winner->cards[j]) == 0) {
                 kept = true;
                 break;
@@ -156,9 +157,9 @@ deck_t *list_possible_starters(hand_t *hand) {
     deck_t *starters = new_deck(52 - hand->ncards);
     init_deck(full_deck);
 
-    for (int i = 0, j = 0; i < full_deck->ncards; i++) {
+    for (uint i = 0, j = 0; i < full_deck->ncards; i++) {
         bool in_hand = false;
-        for (int k = 0; k < hand->ncards; k++) {
+        for (uint k = 0; k < hand->ncards; k++) {
             if (card_cmp(&full_deck->cards[i], &hand->cards[k]) == 0) {
                 in_hand = true;
                 break;
@@ -188,7 +189,7 @@ typedef struct {
     hand_t *winner;
 } discard_probabilistic_data_t;
 
-void eval_candidate_expected(int ncards, int indexes[], void *_data) {
+void eval_candidate_expected(uint ncards, int indexes[], void *_data) {
     discard_probabilistic_data_t *data = (discard_probabilistic_data_t *) _data;
     hand_t *input = data->input;
     hand_t *candidate = data->candidate;
@@ -197,9 +198,9 @@ void eval_candidate_expected(int ncards, int indexes[], void *_data) {
 
     float weight = 1.0 / starters->ncards;
     float expected_score = 0.0;
-    for (int s = 0; s < starters->ncards; s++) {
+    for (uint s = 0; s < starters->ncards; s++) {
         hand_truncate(candidate);
-        for (int i = 0; i < ncards; i++) {
+        for (uint i = 0; i < ncards; i++) {
             hand_append(candidate, input->cards[indexes[i]]);
         }
         add_starter(candidate, starters->cards[s]);
@@ -214,7 +215,7 @@ void eval_candidate_expected(int ncards, int indexes[], void *_data) {
         data->top_expected_score = expected_score;
 
         hand_truncate(candidate);
-        for (int i = 0; i < ncards; i++) {
+        for (uint i = 0; i < ncards; i++) {
             hand_append(candidate, input->cards[indexes[i]]);
         }
         copy_hand(winner, candidate);
@@ -236,9 +237,9 @@ void discard_probabilistic(hand_t *hand, hand_t *crib) {
     iter_combos(hand->ncards, 4, eval_candidate_expected, (void *) &data);
 
     // Add discarded cards to the crib.
-    for (int i = 0; i < hand->ncards; i++) {
+    for (uint i = 0; i < hand->ncards; i++) {
         bool kept = false;
-        for (int j = 0; j < winner->ncards; j++) {
+        for (uint j = 0; j < winner->ncards; j++) {
             if (card_cmp(&hand->cards[i], &winner->cards[j]) == 0) {
                 kept = true;
                 break;
@@ -259,7 +260,7 @@ void discard_probabilistic(hand_t *hand, hand_t *crib) {
 
 /* Discard two cards at random. */
 void discard_random(hand_t *hand, hand_t *crib) {
-    int drop1, drop2;
+    uint drop1, drop2;
     drop1 = rand() % hand->ncards;
     while ((drop2 = rand() % hand->ncards) == drop1) {
     }
@@ -532,7 +533,7 @@ bool peg_hands(int nplayers,
         // Play the selected card: move it from the player's 'avail' array to
         // 'played' and 'cur_played', and update the current count.
         assert(selected >= 0);
-        assert(selected < peg->avail[player]->ncards);
+        assert((uint) selected < peg->avail[player]->ncards);
         card_t card = peg->avail[player]->cards[selected];
         hand_delete(peg->avail[player], selected);
         hand_append(peg->cur_played, card);
@@ -653,7 +654,7 @@ void add_starter(hand_t *hand, card_t starter) {
     hand_append(hand, starter);
     sort_cards(hand->ncards, hand->cards);
     hand->starter = -1;
-    for (int i = 0; i < hand->ncards; i++) {
+    for (uint i = 0; i < hand->ncards; i++) {
         if (card_cmp(&hand->cards[i], &starter) == 0) {
             hand->starter = i;
             break;
@@ -739,8 +740,8 @@ bool play_hand(gamestate_t *game_state, deck_t *deck) {
 
     // Deal the hands.
     shuffle_deck(deck);
-    int deck_offset = 0;
-    for (int i = 0; i < ncards; i++) {
+    uint deck_offset = 0;
+    for (uint i = 0; i < ncards; i++) {
         hand_append(hands[0], deck->cards[deck_offset++]);
         hand_append(hands[1], deck->cards[deck_offset++]);
     }

@@ -96,8 +96,9 @@ bool sb_printf(stringbuilder_t *sb, const char *fmt, ...) {
     va_start(args, fmt);
     int nbytes = vsnprintf(sb->mem + sb->len, avail, fmt, args);
     va_end(args);
+    assert(nbytes >= 0);
 
-    if (nbytes >= avail) {
+    if ((unsigned int) nbytes >= avail) {
         // Buffer is too small: expand it and try again.
         if (!sb_fit_buffer(sb, sb->len + nbytes)) {
             return false;
@@ -107,7 +108,8 @@ bool sb_printf(stringbuilder_t *sb, const char *fmt, ...) {
         va_start(args, fmt);
         int nbytes = vsnprintf(sb->mem + sb->len, avail, fmt, args);
         va_end(args);
-        assert(nbytes < avail);
+        assert(nbytes >= 0);
+        assert((unsigned int) nbytes < avail);
     }
     sb->len += nbytes;
     return true;

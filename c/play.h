@@ -6,7 +6,32 @@
 #include "cards.h"
 #include "score.h"
 
-typedef struct _peg_state peg_state_t;
+#define MAX_ROUNDS 3
+
+typedef struct {
+    // Keep track of the number of times that the pegging count hits or exceeds
+    // 31, and the highest count that we reach each time. With 2 players, 4
+    // cards per hand, both players having only value 10 cards (10, J, Q, K),
+    // then they will top out at 30, 30, 20. Thus the maximum possible number of
+    // counts is 3.
+    uint num_rounds;
+    hand_t *cur_played;                 // list of cards played on current round
+    hand_t *cards_played[MAX_ROUNDS];   // list of cards played on each round
+    int counts[MAX_ROUNDS];             // count reached on each round
+
+    // The current count, i.e. sum of the cards played since the count was last
+    // reset to zero.
+    uint cur_count;
+
+    uint points[2];
+    hand_t *avail[2];
+} peg_state_t;
+
+peg_state_t *new_peg_state(size_t ncards);
+void peg_state_free(peg_state_t *peg);
+
+int peg_select_low(peg_state_t *peg, int player, int other);
+int peg_select_high(peg_state_t *peg, int player, int other);
 
 // peg_func_t implements a pegging strategy: each call plays a single
 // card by the current player. Returns offset into the array of
@@ -64,33 +89,6 @@ playername_t play_game(deck_t *deck, strategy_t strategy_a, strategy_t strategy_
 void discard_simple(hand_t *hand, hand_t *crib);
 void discard_random(hand_t *hand, hand_t *crib);
 void discard_probabilistic(hand_t *hand, hand_t *crib);
-
-#define MAX_ROUNDS 3
-
-typedef struct _peg_state {
-    // Keep track of the number of times that the pegging count hits or exceeds
-    // 31, and the highest count that we reach each time. With 2 players, 4
-    // cards per hand, both players having only value 10 cards (10, J, Q, K),
-    // then they will top out at 30, 30, 20. Thus the maximum possible number of
-    // counts is 3.
-    uint num_rounds;
-    hand_t *cur_played;                 // list of cards played on current round
-    hand_t *cards_played[MAX_ROUNDS];   // list of cards played on each round
-    int counts[MAX_ROUNDS];             // count reached on each round
-
-    // The current count, i.e. sum of the cards played since the count was last
-    // reset to zero.
-    uint cur_count;
-
-    uint points[2];
-    hand_t *avail[2];
-} peg_state_t;
-
-peg_state_t *new_peg_state(size_t ncards);
-void peg_state_free(peg_state_t *peg);
-
-int peg_select_low(peg_state_t *peg, int player, int other);
-int peg_select_high(peg_state_t *peg, int player, int other);
 
 bool evaluate_hands(
     gamestate_t *game_state, int nplayers, hand_t *hands[], hand_t *crib, card_t starter);

@@ -35,7 +35,7 @@ void visit_count_15s(uint ncards, int indexes[], void *_data) {
 }
 
 uint count_15s(hand_t *hand) {
-    count_data_t data = {hand : hand, num_15s : 0};
+    count_data_t data = {.hand = hand, .num_15s = 0};
     for (int subset_len = hand->ncards; subset_len >= 2; subset_len--) {
         iter_combos(hand->ncards, subset_len, visit_count_15s, &data);
     }

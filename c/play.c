@@ -13,13 +13,13 @@
 
 gamestate_t gamestate_init() {
     return (gamestate_t) {
-        player_name : {PLAYER_NOBODY, PLAYER_NOBODY},
-        strategy : {
-            (strategy_t) {peg_func : NULL, discard_func : NULL},
-            (strategy_t) {peg_func : NULL, discard_func : NULL},
+        .player_name = {PLAYER_NOBODY, PLAYER_NOBODY},
+        .strategy = {
+            (strategy_t) {.peg_func = NULL, .discard_func = NULL},
+            (strategy_t) {.peg_func = NULL, .discard_func = NULL},
         },
-        score : {0, 0},
-        winner : PLAYER_NOBODY,
+        .score = {0, 0},
+        .winner = PLAYER_NOBODY,
     };
 }
 

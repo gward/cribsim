@@ -33,9 +33,9 @@ START_TEST(test_card_string) {
 END_TEST
 
 START_TEST(test_card_cmp) {
-    card_t card1 = {rank : RANK_3, suit : SUIT_CLUB};
-    card_t card2 = {rank : RANK_3, suit : SUIT_HEART};
-    card_t card3 = {rank : RANK_4, suit : SUIT_HEART};
+    card_t card1 = {.rank = RANK_3, .suit = SUIT_CLUB};
+    card_t card2 = {.rank = RANK_3, .suit = SUIT_HEART};
+    card_t card3 = {.rank = RANK_4, .suit = SUIT_HEART};
 
     ck_assert_int_lt(card_cmp(&card1, &card2), 0);
     ck_assert_int_gt(card_cmp(&card2, &card1), 0);
@@ -87,16 +87,16 @@ START_TEST(test_hand_str) {
     ck_assert_int_eq(hand->ncards, 0);
     ck_assert_str_eq(hand_str(buf, 20, hand), "");
 
-    hand_append(hand, (card_t) {suit : SUIT_CLUB, rank : RANK_5});
+    hand_append(hand, (card_t) {.suit = SUIT_CLUB, .rank = RANK_5});
     ck_assert_int_eq(hand->ncards, 1);
     ck_assert_str_eq(hand_str(buf, 20, hand), "5♣");
 
-    hand_append(hand, (card_t) {suit : SUIT_DIAMOND, rank : RANK_4});
+    hand_append(hand, (card_t) {.suit = SUIT_DIAMOND, .rank = RANK_4});
     ck_assert_int_eq(hand->ncards, 2);
     ck_assert_str_eq(hand_str(buf, 20, hand), "5♣ 4♦");
 
-    hand_append(hand, (card_t) {suit : SUIT_DIAMOND, rank : RANK_4});
-    hand_append(hand, (card_t) {suit : SUIT_DIAMOND, rank : RANK_4});
+    hand_append(hand, (card_t) {.suit = SUIT_DIAMOND, .rank = RANK_4});
+    hand_append(hand, (card_t) {.suit = SUIT_DIAMOND, .rank = RANK_4});
     ck_assert_int_eq(hand->ncards, 4);
     ck_assert_str_eq(hand_str(buf, 20, hand), "5♣ 4♦ 4♦ 4♦");
 

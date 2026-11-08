@@ -22,75 +22,75 @@ static peg_test_t peg_tests[] = {
     // 2, A, 2, A, 4, A, 6, 8 -- until both are out. Dealer (player 1) gets
     // 1 point for the go.
     {
-        hand_0 : "2♥ 2♥ 4♥ 6♥",
-        hand_1 : "A♠ A♣ A♥ 8♠",
-        expect_plays : {"2♥ A♠ 2♥ A♣ 4♥ A♥ 6♥ 8♠", NULL, NULL},
-        expect_counts : {25, -1, -1},
-        expect_points : {0, 1},
+        .hand_0 = "2♥ 2♥ 4♥ 6♥",
+        .hand_1 = "A♠ A♣ A♥ 8♠",
+        .expect_plays = {"2♥ A♠ 2♥ A♣ 4♥ A♥ 6♥ 8♠", NULL, NULL},
+        .expect_counts = {25, -1, -1},
+        .expect_points = {0, 1},
     },
 
     // Play A, 4, 3, 4, 3: 15 for player 0; then 6, 4, 6: 31 for player 1.
     {
-        hand_0 : "A♥ 3♥ 3♦ 4♥",
-        hand_1 : "4♠ 4♣ 6♥ 6♠",
-        expect_plays : {"A♥ 4♠ 3♥ 4♣ 3♦ 6♥ 4♥ 6♠", NULL, NULL},
-        expect_counts : {31, -1, -1},
-        expect_points : {2, 2},
+        .hand_0 = "A♥ 3♥ 3♦ 4♥",
+        .hand_1 = "4♠ 4♣ 6♥ 6♠",
+        .expect_plays = {"A♥ 4♠ 3♥ 4♣ 3♦ 6♥ 4♥ 6♠", NULL, NULL},
+        .expect_counts = {31, -1, -1},
+        .expect_points = {2, 2},
     },
 
     // Play 7, 4, 8, 5: count is 24 and player 0 is blocked.
     // Play 7: count is 31, 2 points to player 1, reset count to zero.
     // Play 10, 9, 10: count is 29, both players are out, 1 point to player 0.
     {
-        hand_0 : "7♦ 8♣ 0♥ 0♣",
-        hand_1 : "4♦ 5♥ 7♣ 9♣",
-        expect_plays : {"7♦ 4♦ 8♣ 5♥ 7♣", "0♥ 9♣ 0♣", NULL},
-        expect_counts : {31, 29, -1},
-        expect_points : {1, 2},
+        .hand_0 = "7♦ 8♣ 0♥ 0♣",
+        .hand_1 = "4♦ 5♥ 7♣ 9♣",
+        .expect_plays = {"7♦ 4♦ 8♣ 5♥ 7♣", "0♥ 9♣ 0♣", NULL},
+        .expect_counts = {31, 29, -1},
+        .expect_points = {1, 2},
     },
 
     // Play 0, K, 0: count is 30, both blocked, 1 point to player 0.
     // Play K, 0, K: count is 30, both blocked, 1 point to player 1.
     // Play 0, K: count is 20, both players are out, 1 point to player 1.
     {
-        hand_0 : "0♣ 0♦ 0♥ 0♠",
-        hand_1 : "K♣ K♦ K♥ K♠",
-        expect_plays : {"0♣ K♣ 0♦", "K♦ 0♥ K♥", "0♠ K♠"},
-        expect_counts : {30, 30, 20},
-        expect_points : {1, 2},
+        .hand_0 = "0♣ 0♦ 0♥ 0♠",
+        .hand_1 = "K♣ K♦ K♥ K♠",
+        .expect_plays = {"0♣ K♣ 0♦", "K♦ 0♥ K♥", "0♠ K♠"},
+        .expect_counts = {30, 30, 20},
+        .expect_points = {1, 2},
     },
 
     // Play 2, 4, 2, 5, 2: count is 15, 2 points to player 0.
     // Play 6, 9: count is 30, 1 point to player 1 for the go.
     // Play 7: count is 7, both players out, 1 point to player 0.
     {
-        hand_0 : "2♣ 2♦ 2♥ 9♠",
-        hand_1 : "4♥ 5♦ 6♦ 7♥",
-        expect_plays : {"2♣ 4♥ 2♦ 5♦ 2♥ 6♦ 9♠", "7♥", NULL},
-        expect_counts : {30, 7, -1},
-        expect_points : {3, 1},
+        .hand_0 = "2♣ 2♦ 2♥ 9♠",
+        .hand_1 = "4♥ 5♦ 6♦ 7♥",
+        .expect_plays = {"2♣ 4♥ 2♦ 5♦ 2♥ 6♦ 9♠", "7♥", NULL},
+        .expect_counts = {30, 7, -1},
+        .expect_points = {3, 1},
     },
 
     // Play 3, A, 5, A, 5: count is 15, 2 points to player 0.
     // Play 8: count is 23, player 0 blocked, 1 point to player 1.
     // Play K, 9: count is 19, both players out, 1 point to player 1.
     {
-        hand_0 : "3♣ 5♦ 5♥ K♣",
-        hand_1 : "A♦ A♠ 8♦ 9♥",
-        expect_plays : {"3♣ A♦ 5♦ A♠ 5♥ 8♦", "K♣ 9♥", NULL},
-        expect_counts : {23, 19, -1},
-        expect_points : {2, 2},
+        .hand_0 = "3♣ 5♦ 5♥ K♣",
+        .hand_1 = "A♦ A♠ 8♦ 9♥",
+        .expect_plays = {"3♣ A♦ 5♦ A♠ 5♥ 8♦", "K♣ 9♥", NULL},
+        .expect_counts = {23, 19, -1},
+        .expect_points = {2, 2},
     },
 
     // Play J, A, J, 5: count is 26, both players blocked, 1 point to player 1.
     // Play K, 7, K: count is 27, player 0 out, player 1 blocked: 1 point to player 0.
     // Play 9: count is 9, 1 point to player 1 for last card.
     {
-        hand_0 : "J♦ J♥ K♣ K♥",
-        hand_1 : "A♣ 5♦ 7♦ 9♦",
-        expect_plays : {"J♦ A♣ J♥ 5♦", "K♣ 7♦ K♥", "9♦"},
-        expect_counts : {26, 27, 9},
-        expect_points : {1, 2},
+        .hand_0 = "J♦ J♥ K♣ K♥",
+        .hand_1 = "A♣ 5♦ 7♦ 9♦",
+        .expect_plays = {"J♦ A♣ J♥ 5♦", "K♣ 7♦ K♥", "9♦"},
+        .expect_counts = {26, 27, 9},
+        .expect_points = {1, 2},
     },
 
     // This one has a 15, then a pair and a 31 -- all for player 0.
@@ -98,11 +98,11 @@ static peg_test_t peg_tests[] = {
     // Play 8, 8: count is 31, pair for player 0 (4 more points).
     // Play J, 8, Q: count is 28, last card for player 1 (1 point).
     {
-        hand_0 : "6♠ 7♣ 8♥ 8♠",
-        hand_1 : "2♠ 8♦ J♣ Q♦",
-        expect_plays : {"6♠ 2♠ 7♣ 8♦ 8♥", "J♣ 8♠ Q♦", NULL},
-        expect_counts : {31, 28, -1},
-        expect_points : {6, 1},
+        .hand_0 = "6♠ 7♣ 8♥ 8♠",
+        .hand_1 = "2♠ 8♦ J♣ Q♦",
+        .expect_plays = {"6♠ 2♠ 7♣ 8♦ 8♥", "J♣ 8♠ Q♦", NULL},
+        .expect_counts = {31, 28, -1},
+        .expect_points = {6, 1},
     },
 
     // 3-of-a-kind and a run of 3: very exciting.
@@ -112,22 +112,22 @@ static peg_test_t peg_tests[] = {
     // Play 7: count is 31, 2 points plus 3 points for run of 3 to player 0.
     // Play J, Q: count is 20, 1 point to player 1 for last card.
     {
-        hand_0 : "3♠ 5♣ 6♥ 7♠",
-        hand_1 : "5♦ 5♠ J♣ Q♦",
-        expect_plays : {"3♠ 5♦ 5♣ 5♠ 6♥ 7♠", "J♣ Q♦", NULL},
-        expect_counts : {31, 20, -1},
-        expect_points : {7, 7},
+        .hand_0 = "3♠ 5♣ 6♥ 7♠",
+        .hand_1 = "5♦ 5♠ J♣ Q♦",
+        .expect_plays = {"3♠ 5♦ 5♣ 5♠ 6♥ 7♠", "J♣ Q♦", NULL},
+        .expect_counts = {31, 20, -1},
+        .expect_points = {7, 7},
     },
 
     // Play 6, 2, 7: count is 15, 2 points to player 0.
     // Play 6, 8: count is 29, player 1 blocked, 3 to player 0 for run, plus 1 for go.
     // Play 7, 9, K: count is 26, 1 point to player 1 for last card.
     {
-        hand_0 : "6♦ 7♠ 8♥ 9♥",
-        hand_1 : "2♣ 6♠ 7♥ K♣",
-        expect_plays : {"6♦ 2♣ 7♠ 6♠ 8♥", "7♥ 9♥ K♣", NULL},
-        expect_counts : {29, 26, -1},
-        expect_points : {6, 1},
+        .hand_0 = "6♦ 7♠ 8♥ 9♥",
+        .hand_1 = "2♣ 6♠ 7♥ K♣",
+        .expect_plays = {"6♦ 2♣ 7♠ 6♠ 8♥", "7♥ 9♥ K♣", NULL},
+        .expect_counts = {29, 26, -1},
+        .expect_points = {6, 1},
     }};
 
 bool count_pegging(void *data, int player, uint points) {
@@ -200,7 +200,7 @@ END_TEST
 START_TEST(test_add_starter) {
     hand_t *hand = new_hand(5);
     parse_hand(hand, "4♠ 7♠ 9♠ 0♠");
-    add_starter(hand, (card_t) {rank : RANK_5, suit : SUIT_CLUB});
+    add_starter(hand, (card_t) {.rank = RANK_5, .suit = SUIT_CLUB});
 
     ck_assert_int_eq(hand->starter, 1);
     ck_assert_int_eq(hand->cards[1].rank, RANK_5);
@@ -226,40 +226,40 @@ static evaluate_hands_test_t evaluate_hands_tests[] = {
     // - player 1 gets 3 pairs = 6 points
     // - crib is totally useless
     {
-        hand_0 : "2♥ 2♦ 4♥ 6♥",
-        hand_1 : "A♠ A♣ A♥ 8♠",
-        crib : "2♠ 4♣ 6♣ 8♣",
-        starter : {rank : RANK_10, suit : SUIT_CLUB},
-        initial_scores : {0, 0},
-        expect_scores : {2, 7},
-        expect_winner : PLAYER_NOBODY,
-        expect_done : false,
+        .hand_0 = "2♥ 2♦ 4♥ 6♥",
+        .hand_1 = "A♠ A♣ A♥ 8♠",
+        .crib = "2♠ 4♣ 6♣ 8♣",
+        .starter = {.rank = RANK_10, .suit = SUIT_CLUB},
+        .initial_scores = {0, 0},
+        .expect_scores = {2, 7},
+        .expect_winner = PLAYER_NOBODY,
+        .expect_done = false,
     },
 
     // Same, but this time the starter card is a jack: dealer gets 2 additional points.
     {
-        hand_0 : "2♥ 2♦ 4♥ 6♥",
-        hand_1 : "A♠ A♣ A♥ 8♠",
-        crib : "2♠ 4♣ 6♣ 8♣",
-        starter : {rank : RANK_JACK, suit : SUIT_CLUB},
-        initial_scores : {0, 0},
-        expect_scores : {2, 9},
-        expect_winner : PLAYER_NOBODY,
-        expect_done : false,
+        .hand_0 = "2♥ 2♦ 4♥ 6♥",
+        .hand_1 = "A♠ A♣ A♥ 8♠",
+        .crib = "2♠ 4♣ 6♣ 8♣",
+        .starter = {.rank = RANK_JACK, .suit = SUIT_CLUB},
+        .initial_scores = {0, 0},
+        .expect_scores = {2, 9},
+        .expect_winner = PLAYER_NOBODY,
+        .expect_done = false,
     },
 
     // Game is nearly over: player 0 has 120, player 1 has 119. Turning up a
     // jack bumps player 1 over the edge and we have a winner. Player 0 doesn't
     // get a chance to count anything: no pegging, no scoring of hands.
     {
-        hand_0 : "2♥ 2♦ 4♥ 6♥",
-        hand_1 : "A♠ A♣ A♥ 8♠",
-        crib : "2♠ 4♣ 6♣ 8♣",
-        starter : {rank : RANK_JACK, suit : SUIT_CLUB},
-        initial_scores : {120, 119},
-        expect_scores : {120, 121},
-        expect_winner : PLAYER_B,
-        expect_done : true,
+        .hand_0 = "2♥ 2♦ 4♥ 6♥",
+        .hand_1 = "A♠ A♣ A♥ 8♠",
+        .crib = "2♠ 4♣ 6♣ 8♣",
+        .starter = {.rank = RANK_JACK, .suit = SUIT_CLUB},
+        .initial_scores = {120, 119},
+        .expect_scores = {120, 121},
+        .expect_winner = PLAYER_B,
+        .expect_done = true,
     },
 };
 
